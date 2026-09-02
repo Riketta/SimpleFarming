@@ -4,5 +4,6 @@
   <Excluded>
     <exclude>.git</exclude>
     <exclude>Source</exclude>
+    <exclude>Assemblies\0Harmony.dll</exclude>
   </Excluded>
 </Configuration>
