@@ -39,7 +39,7 @@
 
   <!-- ==================== Tooltips ==================== -->
   <SF_RatioTipMammal>A male looks for a fertile female about once every {0} hours while awake ({1} h per day), so roughly {2} mating attempts per day. Each mating impregnates with a {3} chance.\n\nOne male therefore impregnates about {4} females per day. With a {5}-day gestation that keeps {6} females pregnant back-to-back - the ratio shown.\n\nCaveats: males only search a short radius for females, so keep the herd together; males also spend time eating and wandering. Round up when in doubt - a spare male eats little, a missing male stalls the whole herd.</SF_RatioTipMammal>
-  <SF_RatioTipEgg>A male looks for a fertilizable female about once every {0} hours while awake ({1} h per day), so roughly {2} mating attempts per day. Each mating fertilizes the next {3} eggs - about {4} clutches, or {5} days of laying.\n\nOne male keeps {6} females laying fertile eggs continuously - the ratio shown.\n\n{7}</SF_RatioTipEgg>
+  <SF_RatioTipEgg>A male looks for a fertilizable female about once every {0} hours while awake ({1} h per day), so roughly {2} mating attempts per day. A mating fertilizes the female's next {3} eggs, and every clutch laid while that batch lasts comes out fully fertilized - on average one mating covers {4} clutches, or {5} days of laying.\n\nOne male keeps {6} females laying fertile eggs continuously - the ratio shown.\n\n{7}</SF_RatioTipEgg>
   <SF_RatioBreedingOnlyNote>This animal also lays edible unfertilized eggs without any males. The ratio above only matters when you want the eggs to hatch.</SF_RatioBreedingOnlyNote>
   <SF_MalesForEggsTip>Unfertilized egg progress stops partway ({0}%), so without a male this animal never lays at all. With the recommended male ratio the average fertilization wait is about {1} days per clutch.</SF_MalesForEggsTip>
   <SF_TimeToPregnancyTip>A freshly fertile female conceives after about {0} days on average when males are around: {1} mating attempts per male per day, each impregnating with a {2} chance.\n\nThis wait is included in the reproduction cycle, the offspring rate and all food-efficiency numbers below.</SF_TimeToPregnancyTip>
@@ -56,10 +56,8 @@
   <SF_AdultMeatNutritionTip>{0} units of meat x {1} nutrition each = {2} nutrition from a cleanly slaughtered adult.\n\nLeather: {3} units (not counted as food anywhere in this block).\nAnimals killed by damage instead of careful slaughter yield only 66% meat and leather.</SF_AdultMeatNutritionTip>
   <SF_FoodPerAdultTip>Nutrition the farm spends to produce one grown adult, all factors included:\n\n- mother's food while gestating: {0}\n- mother's food while awaiting conception: {1}\n- offspring's growth food, birth to adult: {2}\n- fathers' share (breeding males at the optimal ratio): {3}\n\nTotal: {4} nutrition per adult. The slaughter efficiency rows below divide each stage's meat by the same kind of all-in figure.
 
-Assumes raw feed; processed feed (kibble x1.25, pemmican x1.6, simple meals x1.8) divides these costs proportionally.</SF_FoodPerAdultTip>
-  <SF_EfficiencyTip>Slaughter as {0} - all-in nutrition efficiency, the steady-state farm economics:\n\n- meat returned: {1} nutrition\n- food spent per offspring: {2}\n    - {3} mother's gestation food\n    - {4} mother's conception-wait food\n    - {5} own growth food to this stage\n    - {6} fathers' share\n\nEfficiency: {1} / {2} = {7}. Above 100% the farm grows more food than it eats; below 100% it burns nutrition (grazing makes food free-ish and can still make it worthwhile).\n\nExcluding the fathers' share, the same slaughter returns {8}.
-
-Assumes raw feed (grass, hay, raw meat). Processed feed multiplies this efficiency proportionally - kibble x1.25, pemmican x1.6, simple meals x1.8 - at the cost of pawn work.</SF_EfficiencyTip>
+Assumes raw feed; feed processing multipliers depend on the animal's stomach size - see the slaughter efficiency rows for this animal's exact feed list.</SF_FoodPerAdultTip>
+  <SF_EfficiencyTip>Slaughter as {0} - all-in nutrition efficiency, the steady-state farm economics:\n\n- meat returned: {1} nutrition\n- food spent per offspring: {2}\n    - {3} mother's gestation food\n    - {4} mother's conception-wait food\n    - {5} own growth food to this stage\n    - {6} fathers' share\n\nEfficiency: {1} / {2} = {7}. Above 100% the farm grows more food than it eats; below 100% it burns nutrition (grazing makes food free-ish and can still make it worthwhile).\n\nExcluding the fathers' share, the same slaughter returns {8}.</SF_EfficiencyTip>
   <SF_EfficiencyStagesTip>For comparison:\n{0}</SF_EfficiencyStagesTip>
   <SF_RecommendedTip>{0}\n\nSlaughter age with the best all-in nutrition return per food spent (parents' and offspring's food, fathers included). Cheaper food (grazing) or extra products (milk, wool, leather, eggs) can shift the real answer.</SF_RecommendedTip>
   <SF_PregnantAdviceTip>A randomly picked pregnant female is on average halfway through gestation: about {0} days x {1} nutrition/day = {2} nutrition left to spend on the pregnancy.\n\nThe newborn litter would return {3} nutrition (slaughtered immediately).\n\n{4}</SF_PregnantAdviceTip>
@@ -67,10 +65,19 @@ Assumes raw feed (grass, hay, raw meat). Processed feed multiplies this efficien
   <SF_PregnantAdviceSlaughter>Slaughtering now is fine - the litter does not outvalue the remaining pregnancy feed.</SF_PregnantAdviceSlaughter>
   <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio), all food actually eaten vs meat produced, per female per day:\n\n- meat income: +{1}\n- offspring growth food: -{2}\n- breeding stock food: -{3} (female {4} + male share {5})\n\nNet: {6} nutrition per female per day. This row and the efficiency rows use the same all-in accounting (one is per day, the other per offspring). Egg, milk and wool income and leather are not counted.
 
-Assumes raw feed; kibble x1.25 / pemmican x1.6 / meals x1.8 shrink the food lines proportionally and can turn a negative net positive - at the cost of pawn work. Strict carnivores (wargs) refuse everything processed.</SF_NetPerDayTip>
+Assumes raw feed; per-feed multipliers depend on stomach size (see the slaughter efficiency rows) and can turn a negative net positive - at the cost of pawn work.</SF_NetPerDayTip>
   <SF_NetEggsNote>For eggs instead of meat: an unfertilized-egg pen needs no males at all - {0}/day of hen upkeep vs {1}/day of egg nutrition, without hatching or butchering work.</SF_NetEggsNote>
   <SF_DifficultyYieldNote>Your difficulty's butcher yield x{0} is included.</SF_DifficultyYieldNote>
   <SF_CurveNote>The game's meat post-processing boosts small yields (minimum ~14 meat before body-size scaling tapers off at 40), so small life stages return more meat than a straight body-size proportion of the adult - exactly what butchering yields in game.</SF_CurveNote>
   <SF_EfficiencyComparisonLine>{0}: {1}</SF_EfficiencyComparisonLine>
+
+
+  <SF_FeedListHeader>Feed multipliers vs the raw hay/meat baseline (adult stomach {0} nutrition, eating starts below {1}% full, {2} usable per feeding - growing young have smaller stomachs and waste more):</SF_FeedListHeader>
+  <SF_FeedLineRaw>- raw hay / raw meat pieces: x1.00</SF_FeedLineRaw>
+  <SF_FeedLine>- {0}: x{1}</SF_FeedLine>
+  <SF_FeedLinePartial>- {0}: x{1} - only {2} of {3} nutrition fits per feeding</SF_FeedLinePartial>
+  <SF_FeedLineWorse>- {0}: x{1} - only {2} of {3} fits, WORSE than raw feed</SF_FeedLineWorse>
+  <SF_FeedRefused>- {0}: refused by diet</SF_FeedRefused>
+  <SF_FeedGrazeWaste>- grazing whole plants (~0.5 nutrition) wastes ~{0}% per plant at this stomach size - hay pieces or kibble avoid this</SF_FeedGrazeWaste>
 
 </LanguageData>

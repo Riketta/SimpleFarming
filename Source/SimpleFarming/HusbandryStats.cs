@@ -120,8 +120,8 @@ namespace SimpleFarming
                 string note = m.canLayUnfertilized ? "SF_RatioBreedingOnlyNote".Translate() : "";
                 ratioTip = "SF_RatioTipEgg".Translate(mateMtb, awake, attempts,
                     Mathf.Max(m.eggProps.eggFertilizationCountMax, 1).ToString(),
-                    (Mathf.Max(m.eggProps.eggFertilizationCountMax, 1) / m.litterSizeAvg).ToString("0.##"),
-                    (Mathf.Max(m.eggProps.eggFertilizationCountMax, 1) * m.daysPerOffspring).ToString("0.##"),
+                    m.clutchesPerMating.ToString("0.##"),
+                    (m.clutchesPerMating * m.cycleDays).ToString("0.##"),
                     m.femalesPerMale.ToString("0.#"), note);
             }
             else
@@ -141,7 +141,7 @@ namespace SimpleFarming
                 {
                     string tip = "SF_MalesForEggsTip".Translate(
                         (m.eggProps.eggProgressUnfertilizedMax * 100f).ToString("0"),
-                        m.conceptionDelayDays.ToString("0.##"));
+                        (m.conceptionDelayDays / m.clutchesPerMating).ToString("0.##"));
                     entries.Add(new StatDrawEntry(cat, "SF_MalesForEggsLabel".Translate(),
                         "SF_MalesRequired".Translate(), tip, 9890));
                 }
@@ -251,6 +251,74 @@ namespace SimpleFarming
                 : "";
         }
 
+        /// <summary>Per-feed effective raw-nutrition multipliers for this species' adults,
+        /// accounting for stomach size and overeating: an item bigger than the usable space
+        /// (max nutrition minus the seek-food threshold) wastes the overflow, so large
+        /// processed meals can be worse than raw hay even though their nominal conversion is
+        /// higher. Kibble/pemmican come in 0.05 pieces and never waste.</summary>
+        private static string BuildFeedList(HusbandryModel m)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("SF_FeedListHeader".Translate(
+                m.maxNutritionAdult.ToString("0.##"),
+                (m.wantEatLevel * 100f).ToString("0"),
+                m.feedingSpace.ToString("0.##")));
+            sb.AppendLine("SF_FeedLineRaw".Translate());
+            AddFeedLine(sb, m, "kibble", ThingDefOf.Kibble, "Make_Kibble");
+            AddFeedLine(sb, m, "pemmican", ThingDefOf.Pemmican, "Make_Pemmican");
+            AddFeedLine(sb, m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple");
+            if (m.feedingSpace < 0.5f)
+            {
+                sb.AppendLine("SF_FeedGrazeWaste".Translate(
+                    ((1f - m.feedingSpace / 0.5f) * 100f).ToString("0")));
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Effective raw multiplier for one processed feed: nominal conversion
+        /// (product nutrition / raw nutrition per piece, both read from def + recipe) times
+        /// the fraction of each item the animal can actually absorb before filling up.
+        /// Refused feeds are listed as such [RaceProperties.CanEverEat].</summary>
+        private static void AddFeedLine(StringBuilder sb, HusbandryModel m, string label,
+            ThingDef foodDef, string recipeName)
+        {
+            if (foodDef == null || !m.def.race.CanEverEat(foodDef))
+            {
+                sb.AppendLine("SF_FeedRefused".Translate(label));
+                return;
+            }
+            RecipeDef recipe = DefDatabase<RecipeDef>.GetNamedSilentFail(recipeName);
+            float itemNutrition = foodDef.GetStatValueAbstract(StatDefOf.Nutrition);
+            if (recipe == null || recipe.products.Count == 0 || recipe.ingredients.Count == 0
+                || itemNutrition <= 1e-6f)
+            {
+                return;
+            }
+            float rawNutrition = 0f;
+            for (int i = 0; i < recipe.ingredients.Count; i++)
+            {
+                rawNutrition += recipe.ingredients[i].GetBaseCount();
+            }
+            float nominal = itemNutrition
+                / Mathf.Max(rawNutrition / recipe.products[0].count, 1e-6f);
+            float usable = Mathf.Min(1f, m.feedingSpace / itemNutrition);
+            float mult = nominal * usable;
+            if (mult < 1f)
+            {
+                sb.AppendLine("SF_FeedLineWorse".Translate(label, mult.ToString("0.##"),
+                    m.feedingSpace.ToString("0.##"), itemNutrition.ToString("0.##")));
+            }
+            else if (usable < 1f)
+            {
+                sb.AppendLine("SF_FeedLinePartial".Translate(label, mult.ToString("0.##"),
+                    m.feedingSpace.ToString("0.##"), itemNutrition.ToString("0.##")));
+            }
+            else
+            {
+                sb.AppendLine("SF_FeedLine".Translate(label, mult.ToString("0.##")));
+            }
+        }
+
         private static void AddSlaughterEntries(HusbandryModel m, StatCategoryDef cat, List<StatDrawEntry> entries)
         {
             int last = m.StageCount - 1;
@@ -295,6 +363,7 @@ namespace SimpleFarming
                 {
                     tip += "\n\n" + "SF_CurveNote".Translate();
                 }
+                tip += "\n\n" + BuildFeedList(m);
                 entries.Add(new StatDrawEntry(cat, "SF_EfficiencyLabel".Translate(stageLabel),
                     m.allInEfficiencyToStage[i].ToStringPercent(), tip, 9800 - i * 10));
                 comparison.AppendLine("SF_EfficiencyComparisonLine".Translate(stageLabel,

@@ -18,7 +18,9 @@ namespace SimpleFarming
     /// while awake [ThinkNode_ChancePerHour_Mate, JobGiver_Mate]. With ~16 awake hours a male
     /// makes <c>awakeHours / mateMtbHours</c> attempts per day. Awake hours are a setting.</item>
     /// <item>Each mating of a mammal impregnates with a flat 50% chance; mating an egg layer
-    /// fertilizes her next <c>eggFertilizationCountMax</c> eggs with certainty [PawnUtility.Mated].</item>
+    /// fertilizes her next <c>eggFertilizationCountMax</c> eggs with certainty [PawnUtility.Mated] -
+    /// and every clutch laid from that batch is fertilized whole, so one mating covers whole
+    /// clutches, not single eggs [CompEggLayer.ProduceEgg].</item>
     /// <item>Mammal gestation lasts <c>gestationPeriodDays</c> and yields a litter rolled from
     /// <c>litterSizeCurve</c> (average via Rand.ByCurveAverage, min 1) [Hediff_Pregnant].
     /// Egg layers produce a clutch from <c>eggCountRange</c> every <c>eggLayIntervalDays</c>
@@ -74,6 +76,14 @@ namespace SimpleFarming
         public float mateMtbHours;
         public float attemptsPerMalePerDay;
 
+        /// <summary>Clutches one mating covers for egg layers. Mating sets a fertilization
+        /// batch of eggFertilizationCountMax eggs, and every clutch laid while the batch
+        /// lasts is fertilized whole - CompEggLayer.ProduceEgg consumes the entire clutch
+        /// from the batch at once - so a mating covers about ceil(batch / average clutch)
+        /// clutches: exactly 1 for every vanilla def (batch 1, clutch always >= 1), even
+        /// for multi-egg clutches like tortoise (1~3) or cobra (1~2).</summary>
+        public float clutchesPerMating;
+
         /// <summary>Average days a fertile female waits to conceive (or a stalled hen to be
         /// fertilized) when males are available: 1 / (attempts x success).</summary>
         public float conceptionDelayDays;
@@ -108,6 +118,23 @@ namespace SimpleFarming
         /// fully charged via gestation + conception wait (that is her whole calendar); the male
         /// eats alongside her every day of the cycle, so all-in accounting adds this too.</summary>
         public float maleFoodPerOffspring;
+
+        // ---- feeding space / overeating ----
+
+        /// <summary>Adult stomach capacity in nutrition: the MaxNutrition stat = 1 x
+        /// baseBodySize for vanilla adults [StatPart_BodySize; StatPart_LifeStageMaxFood is a
+        /// pawn-only part and vanilla adults have foodMaxFactor 1].</summary>
+        public float maxNutritionAdult;
+
+        /// <summary>Hunger percentage where an adult goes looking for food - diet-dependent:
+        /// herbivores/dendrovores 0.45, carnivores/omnivores 0.3, ovivores 0.4
+        /// [RaceProperties.FoodLevelPercentageWantEat; JobGiver_GetFood priority 9.5].</summary>
+        public float wantEatLevel;
+
+        /// <summary>Usable space per feeding: maxNutritionAdult x (1 - wantEatLevel). A feed
+        /// item bigger than this wastes the overflow, which is why large processed meals can
+        /// be worse than raw pieces for small animals.</summary>
+        public float feedingSpace;
 
         /// <summary>[i] = nutrition eaten from birth until reaching stage i ([0] = 0).</summary>
         public float[] growthFoodToStage;
@@ -257,9 +284,16 @@ namespace SimpleFarming
                 m.attemptsPerMalePerDay * successPerMating, Epsilon);
 
             // Days of one female's reproduction that a single successful mating sustains:
-            // a full gestation for mammals, eggFertilizationCountMax eggs for layers.
+            // a full gestation for mammals, clutchesPerMating whole clutches for layers -
+            // ProduceEgg fertilizes each clutch whole and consumes it from the
+            // eggFertilizationCountMax-egg batch, so a mating covers
+            // ceil(batch / average clutch) clutches (exactly 1 for vanilla defs).
+            m.clutchesPerMating = m.isEggLayer
+                ? Mathf.Max(1f, Mathf.Ceil(Mathf.Max(m.eggProps.eggFertilizationCountMax, 1)
+                    / m.litterSizeAvg))
+                : 1f;
             float daysCoveredPerMating = m.isEggLayer
-                ? Mathf.Max(m.eggProps.eggFertilizationCountMax, 1) * m.daysPerOffspring
+                ? m.clutchesPerMating * m.cycleDays
                 : m.cycleDays;
 
             m.malesPerFemale = 1f / (conceptionsPerMalePerDay * daysCoveredPerMating);
@@ -269,8 +303,8 @@ namespace SimpleFarming
             // ---- throughput ----
             // Egg layers that can lay unfertilized eggs lose no laying time waiting for males.
             // One mating covers cyclesPerMating cycles, so the wait amortizes: mammals wait
-            // once per gestation, stall layers once per eggFertilizationCountMax eggs
-            // (batches > 1 exist only in mods - vanilla defs are all 1).
+            // once per gestation, stall layers once per clutchesPerMating clutches
+            // (batches > 1 egg exist only in mods - vanilla defs are all 1).
             bool cycleHasDelay = !m.isEggLayer || m.malesNeededForEggs;
             float cyclesPerMating = daysCoveredPerMating / m.cycleDays;
             float delayDaysPerCycle = cycleHasDelay
@@ -288,6 +322,11 @@ namespace SimpleFarming
             m.conceptionFoodPerOffspring = delayDaysPerCycle / m.litterSizeAvg * m.adultFoodPerDay;
             m.maleFoodPerOffspring = m.malesPerFemale
                 * (m.gestationFoodPerOffspring + m.conceptionFoodPerOffspring);
+
+            // ---- feeding space / overeating ----
+            m.maxNutritionAdult = def.GetStatValueAbstract(StatDefOf.MaxNutrition);
+            m.wantEatLevel = race.FoodLevelPercentageWantEat;
+            m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
 
             int stageCount = m.stages.Count;
             m.growthFoodToStage = new float[stageCount];

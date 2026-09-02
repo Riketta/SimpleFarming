@@ -45,8 +45,11 @@ All mechanics mirror the live game code (references are 1.6 sources):
   animals actually reach the mate node is a behavioral assumption, not game data.
 - **Conception**: each mating impregnates a mammal with a flat **50%** chance; mating an egg
   layer fertilizes her next `eggFertilizationCountMax` eggs with certainty (`PawnUtility.Mated`).
-  The average wait for a mating amortizes across everything one mating covers - a full
-  gestation for mammals, the whole fertilized batch for layers.
+  Every clutch laid from that batch is fertilized whole (`CompEggLayer.ProduceEgg` consumes the
+  entire clutch from the batch at once), so one mating covers whole clutches - with the vanilla
+  batch of 1, exactly one clutch per mating, even for multi-egg clutches (tortoise 1~3,
+  cobra/iguana 1~2). The average wait for a mating amortizes across everything one mating
+  covers - a full gestation for mammals, `ceil(batch / avgClutch)` clutches for layers.
 - **Gestation/laying**: mammals gestate `gestationPeriodDays` then birth a litter rolled from
   `litterSizeCurve` (average via `Rand.ByCurveAverage`); egg layers lay `eggCountRange` eggs
   every `eggLayIntervalDays` (`CompEggLayer`), and fertilized eggs hatch after the egg def's
@@ -55,8 +58,9 @@ All mechanics mirror the live game code (references are 1.6 sources):
 - **Time until pregnancy** `T = 1 / (attemptsPerMalePerDay x pregnancyChance)`, and it is
   included - as requested - in the cycle length, throughput, and the mother's food cost.
 - **Optimal ratio**: one successful mating sustains `C` days of one female's reproduction
-  (`C = gestationPeriodDays` for mammals, `C = eggFertilizationCountMax x eggInterval / eggsPerClutch`
-  for layers), so `malesPerFemale = 1 / (attempts x chance x C)`. Sanity checks: ibex -> 1 male
+  (`C = gestationPeriodDays` for mammals, `C = ceil(eggFertilizationCountMax / eggsPerClutch) x
+  eggInterval` for layers, since each clutch is fertilized whole), so
+  `malesPerFemale = 1 / (attempts x chance x C)`. Sanity checks: ibex -> 1 male
   per 3.8 females (wiki: 0.27 males/female), cow -> 1 per 4.4 (wiki: 0.23).
 - **Food per day** = life stage `hungerRateFactor` x `race.baseHungerRate` x
   `Need_Food.BaseFoodFallPerTick` x ticks-per-day (= x1.6) for a well-fed animal
@@ -142,37 +146,58 @@ otherwise). The tooltip states the factor whenever it differs from 100%. Chicken
 100% yield an adult is worth 2.10 nutrition and nets +0.31/day per hen as meat; at a custom
 0.84 yield it is 1.76 and nets -0.02 - same animal, same formulas, different difficulty.
 
-### Feeding assumption: raw feed (and how processing changes everything)
+### Feeding assumption: raw feed, stomach size and overeating
 
 All food and efficiency numbers assume animals eat **raw** feed - grass, hay, raw meat -
-straight from the floor of the pen. If you cook for the herd instead, every food input in
-the block shrinks by the processing multiplier while the meat output stays the same, so
-every efficiency percentage multiplies directly and the net row improves (it can turn a
-losing operation profitable):
+straight into the animal, with every piece fully absorbed (no waste). The meat output never
+changes with feed type; what changes is how much raw nutrition the farm must spend to
+deliver that food:
 
-| Feed | Nutrition per 1.0 raw | Chicken adult | Ibex adult | Cow adult |
-| ---- | --------------------- | ------------- | ---------- | --------- |
-| Raw (assumed) | x1.00 | 118% | 129% | 58% |
-| Kibble | x1.25 | 147% | 161% | 73% |
-| Pemmican | x1.60 | 188% | 206% | 93% |
-| Simple meals | x1.80 | 212% | 232% | 105% |
+- **Raw pieces** (hay 0.05, raw meat 0.05, grass grazed whole): x1.00 baseline.
+- **Kibble** (0.05/piece, 2.0 raw -> 2.5 = x1.25): pieces are tiny, so the full x1.25
+  applies to every animal that can eat it.
+- **Pemmican** (0.05/piece, 0.5 raw -> 0.8 = x1.60): same, full x1.60.
+- **Simple meals** (0.9/meal, 0.5 raw -> 0.9 = x1.80 nominal): the catch - see below.
 
-Multipliers verified from the 1.6 recipes: kibble = 1.0 protein + 1.0 greens nutrition ->
-2.5 kibble nutrition (125%); pemmican = 0.25 + 0.25 -> 0.8 (160%); simple meal = 0.5 ->
-0.9 (180%). Worked example at a custom 0.84 butcher yield: chicken adult slaughter goes
-from 105% raw-fed to 132% on kibble, and the net row turns from -0.02 to +0.33 per hen per
-day. The price is pawn work (cooking/butchering bills and hauling to the pen), plus:
+**The catch: stomach size.** An animal only seeks food when its stomach is below a
+diet-dependent level (herbivores 45% full, omnivores/carnivores 30%, egg-eaters 40%), then
+eats whole items. A feed item bigger than the free space has its overflow **wasted**, so the
+effective multiplier for an item of size N is `nominal x min(1, usableSpace / N)` with
+`usableSpace = MaxNutrition x (1 - wantEat)`:
 
-- kibble needs both protein and greens in the bill (hay alone won't do; insect and human
-  meat are fine), and like pemmican it never rots under a roof - the usual winter sweet spot;
-- strict carnivores (wargs) refuse kibble and meals outright - raw meat or corpses only;
-- for grazers that would otherwise eat free grass, cooked feed mostly matters in winter,
-  barren biomes, or when the pen's grass can't keep up.
+| Animal (adult) | Stomach | Seeks food below | Kibble | Pemmican | Simple meal |
+| -------------- | ------- | ---------------- | ------ | -------- | ----------- |
+| Cow (2.4) | 2.40 | 45% | x1.25 | x1.60 | x1.80 (fits) |
+| Ibex (1.0) | 1.00 | 45% | x1.25 | x1.60 | x1.10 (0.55 fits of 0.9) |
+| Turkey (0.6) | 0.60 | 45% | x1.25 | x1.60 | **x0.66 - worse than raw** |
+| Chicken (0.3) | 0.30 | 45% | x1.25 | x1.60 | **x0.33 - worse than raw** (0.165 of 0.9 fits) |
+| Rat (0.2, omnivore) | 0.20 | 30% | x1.25 | x1.60 | **x0.28 - worse than raw** |
+
+`MaxNutrition` = 1 x body size; want-to-eat is a diet property (45% herbivores, 30%
+carnivores/omnivores, 40% egg-eaters). So your exact intuition holds: **small animals gain
+nothing from cooked meals - for anything with a stomach under 0.5 nutrition a 0.9 meal is
+more than half waste and the ratio gets worse than raw**; meals only pay off for animals
+with stomachs of 0.5+ (fully at 1.2+). Kibble and pemmican pieces are small enough to never
+waste, which is why they are the reliable way to run a marginal farm at a profit (chicken
+meat 105% raw-fed becomes 132% on kibble at a 0.84 butcher yield). The tooltip also marks
+feeds the animal's diet refuses outright (wargs vs everything processed, herbivores vs
+meat-only feeds).
+
+Also worth knowing: grazing whole plants (0.5 nutrition each) is itself wasteful for small
+animals - a chicken only absorbs 0.165 of every 0.5-nutrition plant (67% wasted). The
+mod's efficiency rows are absorbed-nutrition based, so they don't charge for that waste;
+feeding hay pieces or kibble instead of grazing avoids it entirely.
+
+All of this is computed per animal and listed in the slaughter efficiency tooltips (stomach
+size, seek level, usable space, and the effective multiplier per feed, with refusals and
+waste warnings).
 
 ### Assumptions & limits
 
-- Animals are fed continuously (troughs/hand feeding). Grazing animals overeat wild plants and
-  waste nutrition - that loss is not modeled.
+- Animals are fed continuously (troughs/hand feeding). Grazing animals overeat whole wild
+  plants and waste the overflow - the efficiency rows are absorbed-nutrition based and don't
+  charge for that, but the feed list in the efficiency tooltip now quantifies the waste per
+  animal (a chicken wastes ~67% of every grazed plant).
 - Healthy, fertile, non-sterile adults; no miscarriages; no age fertility falloff.
 - "Optimal ratio" assumes the herd is penned together so males always find fertile females;
   males also eat, sleep and wander, so round up in practice.
