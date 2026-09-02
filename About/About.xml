@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Simple Farming</name>
+  <author>
+    <li>Riketta</li>
+  </author>
+  <packageId>Riketta.SimpleFarming</packageId>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <description>Adds a "farming" block to every animal's info card with husbandry math computed straight from the animal's own data, so vanilla, DLC and modded animals are all covered:
+
+- Optimal male:female breeding ratio (for egg layers: whether males are needed at all, and the ratio for fertile eggs).
+- Average time until pregnancy / fertilization, and how it stretches the reproduction cycle.
+- Offspring and meat per female per day, and herd food upkeep including the male share.
+- Food spent to grow one adult (mother's gestation food + conception wait + growth food per life stage) and slaughter nutrition efficiency for every life stage, with the best age to slaughter.
+- Whether pregnant females are worth keeping until birth.
+
+Everything is derived from game data (mate MTB, gestation, egg comps, life-stage hunger and body-size factors, meat stats) - nothing is hardcoded per animal. Optional debug logging and a dev-mode dump of all animals' stats.</description>
+</ModMetaData>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- Shown in the animal info card right after vanilla's "animal productivity" block. -->
+  <StatCategoryDef>
+    <defName>SimpleFarmingHusbandry</defName>
+    <label>farming</label>
+    <displayOrder>27</displayOrder>
+  </StatCategoryDef>
+
+</Defs>
