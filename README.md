@@ -147,7 +147,9 @@ About/                       mod metadata
 Defs/                        the "farming" StatCategoryDef
 Languages/English/Keyed/     labels, values and tooltips
 Source/SimpleFarming/        C# source + csproj
-Assemblies/                  SimpleFarming.dll + bundled 0Harmony.dll (excluded from uploads)
+Assemblies/                  SimpleFarming.dll (Harmony is compile-time only via the
+                             Lib.Harmony package, not shipped - players use the
+                             Workshop Harmony mod)
 ```
 
 Code layout: `HusbandryModel` (math), `HusbandryStats` (stat rows + tooltips),
