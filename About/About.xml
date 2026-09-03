@@ -3,6 +3,7 @@
   <name>Simple Farming</name>
   <author>Riketta</author>
   <packageId>Riketta.SimpleFarming</packageId>
+  <modVersion IgnoreIfNoMatchingField="True">1.0.0</modVersion>
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>
