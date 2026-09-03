@@ -155,11 +155,12 @@ Code layout: `HusbandryModel` (math), `HusbandryStats` (stat rows + tooltips),
 ## Building
 
 Requires the .NET SDK. The csproj defaults to `E:\SteamLibrary\steamapps\common\RimWorld`;
-override with your install path:
+override with your install path. Build the Release configuration for the dll you ship -
+a plain `dotnet build` defaults to Debug:
 
 ```
 cd Source/SimpleFarming
-dotnet build -p:RimWorldDir="C:\Path\To\RimWorld"
+dotnet build -c Release -p:RimWorldDir="C:\Path\To\RimWorld"
 ```
 
 The whole `SimpleFarming` folder can be symlinked or copied into the game's `Mods` directory.
