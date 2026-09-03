@@ -5,6 +5,8 @@ tab): optimal breeding ratios, reproduction timing, food costs and slaughter nut
 efficiency - computed live from each animal's own def data, so vanilla, DLC and modded
 animals all work without any per-species hardcoding.
 
+Requires the [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) mod.
+
 ## What the block shows
 
 **Breeding**
@@ -145,14 +147,14 @@ About/                       mod metadata
 Defs/                        the "farming" StatCategoryDef
 Languages/English/Keyed/     labels, values and tooltips
 Source/SimpleFarming/        C# source + csproj
-Assemblies/                  SimpleFarming.dll + bundled 0Harmony.dll
+Assemblies/                  SimpleFarming.dll + bundled 0Harmony.dll (excluded from uploads)
 ```
 
 Code layout: `HusbandryModel` (math), `HusbandryStats` (stat rows + tooltips),
 `HarmonyPatches` (one postfix on `RaceProperties.SpecialDisplayStats`), `SimpleFarmingMod`
 (settings), `FarmingLog`, `FarmingDebugActions`.
 
-## Building
+## Build from source
 
 Requires the .NET SDK. The csproj defaults to `E:\SteamLibrary\steamapps\common\RimWorld`;
 override with your install path. Build the Release configuration for the dll you ship -
@@ -163,4 +165,5 @@ cd Source/SimpleFarming
 dotnet build -c Release -p:RimWorldDir="C:\Path\To\RimWorld"
 ```
 
-The whole `SimpleFarming` folder can be symlinked or copied into the game's `Mods` directory.
+The output lands in `Assemblies/SimpleFarming.dll`; the whole `SimpleFarming` folder can
+be copied or symlinked into the game's `Mods` directory.

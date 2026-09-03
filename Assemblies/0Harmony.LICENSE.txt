@@ -1,7 +1,6 @@
-0Harmony.dll is Harmony by Andreas Pardeike (https://github.com/pardeike/Harmony),
-version 2.3.3, copied unmodified. It is licensed under the MIT License:
+MIT License
 
-Copyright (c) 2020 Andreas Pardeike
+Copyright (c) 2017 Andreas Pardeike
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

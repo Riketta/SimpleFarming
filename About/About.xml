@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
   <name>Simple Farming</name>
-  <author>
-    <li>Riketta</li>
-  </author>
+  <author>Riketta</author>
   <packageId>Riketta.SimpleFarming</packageId>
   <supportedVersions>
     <li>1.6</li>
@@ -16,5 +14,17 @@
 - Food spent to grow one adult (mother's gestation food + conception wait + growth food per life stage) and slaughter nutrition efficiency for every life stage, with the best age to slaughter.
 - Whether pregnant females are worth keeping until birth.
 
-Everything is derived from game data (mate MTB, gestation, egg comps, life-stage hunger and body-size factors, meat stats) - nothing is hardcoded per animal. Optional debug logging and a dev-mode dump of all animals' stats.</description>
+Everything is derived from game data (mate MTB, gestation, egg comps, life-stage hunger and body-size factors, meat stats) - nothing is hardcoded per animal. Optional debug logging and a dev-mode dump of all animals' stats.
+
+Source code &amp; details: https://github.com/Riketta/SimpleFarming</description>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopURL>https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077</steamWorkshopURL>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+  </loadAfter>
 </ModMetaData>

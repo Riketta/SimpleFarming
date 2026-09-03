@@ -33,8 +33,9 @@
       <HintPath>$(GameManaged)\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <!-- Compile against the Harmony copy shipped in Assemblies; Private=false keeps the
-         build from overwriting it with a duplicate copy. -->
+    <!-- Compile against the Harmony copy shipped in Assemblies (excluded from Workshop
+         uploads via _PublisherPlus.xml - players use the Steam Workshop Harmony mod,
+         declared in About.xml). Private=false keeps the build from copying a duplicate. -->
     <Reference Include="0Harmony">
       <HintPath>..\..\Assemblies\0Harmony.dll</HintPath>
       <Private>false</Private>
