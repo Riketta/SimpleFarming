@@ -22,7 +22,7 @@ Source code &amp; details: https://github.com/Riketta/SimpleFarming</description
     <li>
       <packageId>brrainz.harmony</packageId>
       <displayName>Harmony</displayName>
-      <steamWorkshopURL>https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077</steamWorkshopURL>
+      <steamWorkshopUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077</steamWorkshopUrl>
     </li>
   </modDependencies>
   <loadAfter>
