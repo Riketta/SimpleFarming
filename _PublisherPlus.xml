@@ -4,5 +4,6 @@
   <Excluded>
     <exclude>.git</exclude>
     <exclude>Source</exclude>
+    <exclude>TLDR.md</exclude>
   </Excluded>
 </Configuration>
