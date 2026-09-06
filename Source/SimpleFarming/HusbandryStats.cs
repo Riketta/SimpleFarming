@@ -229,7 +229,7 @@ namespace SimpleFarming
 
             // -- breeding stock upkeep incl. male share --
             entries.Add(new StatDrawEntry(cat, "SF_HerdFoodLabel".Translate(),
-                m.herdFoodPerFemalePerDay.ToString("0.##"),
+                NutritionValue(m.herdFoodPerFemalePerDay),
                 "SF_HerdFoodTip".Translate(m.adultFoodPerDay.ToString("0.##"),
                     m.malesPerFemale.ToString("0.###"), m.herdFoodPerFemalePerDay.ToString("0.##"))
                     + FeedNote(m), 9830));
@@ -326,6 +326,14 @@ namespace SimpleFarming
                 : "";
         }
 
+        /// <summary>Suffixes a nutrition value with its unit, e.g. "0.34 nutrition" - the
+        /// counterpart of <see cref="MeatValue"/> for rows where the number is food, not
+        /// meat, and no piece count exists.</summary>
+        private static string NutritionValue(float value, string format = "0.##")
+        {
+            return value.ToString(format) + " " + "SF_NutritionWord".Translate();
+        }
+
         private static void AddSlaughterEntries(HusbandryModel m, StatCategoryDef cat, List<StatDrawEntry> entries)
         {
             int last = m.StageCount - 1;
@@ -342,7 +350,7 @@ namespace SimpleFarming
             float adultGrowth = m.growthFoodToStage[last];
             float adultTotal = m.AllInFoodToStage(last);
             entries.Add(new StatDrawEntry(cat, "SF_FoodPerAdultLabel".Translate(),
-                adultTotal.ToString("0.##"),
+                NutritionValue(adultTotal),
                 "SF_FoodPerAdultTip".Translate(m.gestationFoodPerOffspring.ToString("0.##"),
                     m.conceptionFoodPerOffspring.ToString("0.##"), adultGrowth.ToString("0.##"),
                     m.maleFoodPerOffspring.ToString("0.##"),
@@ -411,7 +419,7 @@ namespace SimpleFarming
                         (eggsPerDay * eggNutrition).ToString("0.##"));
                 }
                 entries.Add(new StatDrawEntry(cat, "SF_NetPerDayLabel".Translate(),
-                    net.ToString("+0.00;-0.00"),
+                    net.ToString("+0.00;-0.00") + " " + "SF_NutritionWord".Translate(),
                     "SF_NetPerDayTip".Translate(StageLabel(m, best), m.feedLabel,
                         meatPerDay.ToString("0.00"),
                         offspringFoodPerDay.ToString("0.00"),

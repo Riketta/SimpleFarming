@@ -18,13 +18,13 @@
   <SF_OffspringPerDayLabel>offspring per female per day</SF_OffspringPerDayLabel>
   <SF_MeatPerDayLabel>meat per female per day</SF_MeatPerDayLabel>
   <SF_LeatherPerDayLabel>leather per female per day</SF_LeatherPerDayLabel>
-  <SF_HerdFoodLabel>food per female per day, incl. males (nutrition)</SF_HerdFoodLabel>
+  <SF_HerdFoodLabel>food per female per day (incl. males)</SF_HerdFoodLabel>
   <SF_AdultMeatNutritionLabel>adult meat nutrition</SF_AdultMeatNutritionLabel>
-  <SF_FoodPerAdultLabel>food to grow one adult (nutrition)</SF_FoodPerAdultLabel>
+  <SF_FoodPerAdultLabel>food to grow one adult</SF_FoodPerAdultLabel>
   <SF_EfficiencyLabel>slaughter efficiency ({0})</SF_EfficiencyLabel>
   <SF_RecommendedLabel>best slaughter age</SF_RecommendedLabel>
   <SF_PregnantAdviceLabel>slaughter pregnant females?</SF_PregnantAdviceLabel>
-  <SF_NetPerDayLabel>net meat per female per day (nutrition)</SF_NetPerDayLabel>
+  <SF_NetPerDayLabel>net meat per female per day</SF_NetPerDayLabel>
 
   <!-- ==================== Stat values ==================== -->
   <SF_RatioFemalesPerMale>1 male : {0} females</SF_RatioFemalesPerMale>
@@ -100,6 +100,7 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
 
   <SF_MeatUnits>{0} meat</SF_MeatUnits>
   <SF_MeatUnitsPerDay>{0} meat per day</SF_MeatUnitsPerDay>
+  <SF_NutritionWord>nutrition</SF_NutritionWord>
   <SF_FeedBreakdownHeader>Efficiency by feed (current: {0}):</SF_FeedBreakdownHeader>
   <SF_FeedBreakdownBaseline>    {0}: {1} (baseline)</SF_FeedBreakdownBaseline>
   <SF_FeedBreakdownLine>    {0}: {1}</SF_FeedBreakdownLine>
