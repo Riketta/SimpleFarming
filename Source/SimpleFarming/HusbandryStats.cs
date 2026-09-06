@@ -357,15 +357,7 @@ namespace SimpleFarming
                     adultTotal.ToString("0.##")) + YieldNote(m) + FeedNote(m), 9810));
 
             // -- max stomach per life stage: what "a meal too big" means for this animal --
-            StringBuilder stomach = new StringBuilder();
-            for (int i = 0; i < m.StageCount; i++)
-            {
-                if (i > 0)
-                {
-                    stomach.Append("/");
-                }
-                stomach.Append(m.stageMaxNutrition[i].ToString("0.##"));
-            }
+            string stomach = HusbandryModel.JoinedSlash(m.stageMaxNutrition, "0.##");
             // feeding attempts per growth stage (eat-to-full each time), listed per stage
             // with its length; the adult stage is open-ended, so it is per day instead
             StringBuilder meals = new StringBuilder();

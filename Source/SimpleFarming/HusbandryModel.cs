@@ -276,33 +276,59 @@ namespace SimpleFarming
             m.eggProps = def.GetCompProperties<CompProperties_EggLayer>();
             m.isEggLayer = m.eggProps != null;
             m.stages = race.lifeStageAges;
-
-            if (m.stages.NullOrEmpty())
+            string skipReason = ValidateDef(m, race);
+            if (skipReason != null)
             {
-                return Skip(m, "no life stages");
-            }
-            if (race.disableMating)
-            {
-                return Skip(m, "mating disabled for this species");
-            }
-            if (!race.hasGenders)
-            {
-                return Skip(m, "species has no genders");
-            }
-            if (race.mateMtbHours <= 0f)
-            {
-                return Skip(m, "never seeks mates (mateMtbHours <= 0)");
-            }
-            if (!m.isEggLayer && race.gestationPeriodDays <= 0f)
-            {
-                return Skip(m, "cannot gestate (gestationPeriodDays <= 0)");
-            }
-            if (m.isEggLayer && m.eggProps.eggFertilizedDef == null)
-            {
-                return Skip(m, "egg layer has no fertilized egg def");
+                return Skip(m, skipReason);
             }
             m.applicable = true;
 
+            float delayDaysPerCycle = ComputeReproduction(m, race);
+            ComputeFeedingSpace(m, def, race);
+            ComputeFeedOptions(m);
+            ComputeFood(m, race, delayDaysPerCycle);
+            ComputeMeat(m, def, race);
+            ComputeEfficiency(m);
+            ComputePregnantAdvice(m);
+            return m;
+        }
+
+        /// <summary>Def-data sanity gates. Returns the skip reason, or null when the model
+        /// is computable.</summary>
+        private static string ValidateDef(HusbandryModel m, RaceProperties race)
+        {
+            if (m.stages.NullOrEmpty())
+            {
+                return "no life stages";
+            }
+            if (race.disableMating)
+            {
+                return "mating disabled for this species";
+            }
+            if (!race.hasGenders)
+            {
+                return "species has no genders";
+            }
+            if (race.mateMtbHours <= 0f)
+            {
+                return "never seeks mates (mateMtbHours <= 0)";
+            }
+            if (!m.isEggLayer && race.gestationPeriodDays <= 0f)
+            {
+                return "cannot gestate (gestationPeriodDays <= 0)";
+            }
+            if (m.isEggLayer && m.eggProps.eggFertilizedDef == null)
+            {
+                return "egg layer has no fertilized egg def";
+            }
+            return null;
+        }
+
+        /// <summary>Litter/clutch size, cycle length, mating rate, optimal ratio and
+        /// throughput. Returns the average conception-wait days per cycle, which the food
+        /// math charges to the mother.</summary>
+        private static float ComputeReproduction(HusbandryModel m, RaceProperties race)
+        {
             // ---- litter & cycles ----
             if (m.isEggLayer)
             {
@@ -366,8 +392,13 @@ namespace SimpleFarming
                 : 0f;
             m.cycleDaysWithDelay = m.cycleDays + delayDaysPerCycle;
             m.offspringPerFemalePerDay = m.litterSizeAvg / Mathf.Max(m.cycleDaysWithDelay, Epsilon);
+            return delayDaysPerCycle;
+        }
 
-            // ---- feeding space / overeating ----
+        /// <summary>Adult stomach capacity, the diet-dependent seek threshold and the
+        /// resulting usable feeding space, per life stage.</summary>
+        private static void ComputeFeedingSpace(HusbandryModel m, ThingDef def, RaceProperties race)
+        {
             m.maxNutritionAdult = def.GetStatValueAbstract(StatDefOf.MaxNutrition);
             m.wantEatLevel = race.FoodLevelPercentageWantEat;
             m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
@@ -376,12 +407,15 @@ namespace SimpleFarming
             {
                 m.stageMaxNutrition[i] = m.maxNutritionAdult * m.stages[i].def.bodySizeFactor;
             }
+        }
 
-            // ---- feed options ----
-            // Compute every feed the diet allows, settings or not: raw pieces (x1.00
-            // baseline), kibble (x1.25), pemmican (x1.60), simple meals (up to x1.80 - items
-            // bigger than the usable stomach space waste the overflow). The player's settings
-            // only pick which of these the headline numbers assume.
+        /// <summary>Computes every feed the diet allows, settings or not, then picks the
+        /// headline feed: the best multiplier among usable feeds the player enabled.</summary>
+        private static void ComputeFeedOptions(HusbandryModel m)
+        {
+            // Raw pieces (x1.00 baseline), kibble (x1.25), pemmican (x1.60), simple meals
+            // (up to x1.80 - items bigger than the usable stomach space waste the overflow).
+            // Every food cost below is raw nutrition at the chosen multiplier.
             SimpleFarmingSettings s = SimpleFarmingMod.Instance?.settings;
             m.feedOptions = new List<FeedOption>
             {
@@ -404,8 +438,14 @@ namespace SimpleFarming
             }
             m.feedMultiplier = chosen.multiplier;
             m.feedLabel = chosen.label;
+        }
 
-            // ---- food ----
+        /// <summary>Food rates per day (already in raw nutrition of the assumed feed), the
+        /// mother's calendar food per offspring and the fathers' share at the optimal ratio,
+        /// plus per-stage rates, stage lengths and cumulative growth food.</summary>
+        private static void ComputeFood(HusbandryModel m, RaceProperties race,
+            float delayDaysPerCycle)
+        {
             float nutritionPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay
                 / m.feedMultiplier;
             float adultFactor = m.AdultStage.def.hungerRateFactor;
@@ -435,8 +475,13 @@ namespace SimpleFarming
                 m.growthFoodToStage[i] = m.growthFoodToStage[i - 1]
                     + spanDays * m.stageFoodPerDay[i - 1];
             }
+        }
 
-            // ---- meat ----
+        /// <summary>Meat and leather from the defs; per-stage meat recovers the raw adult
+        /// MeatAmount, scales by body-size factor and re-applies the post-process curve.</summary>
+        private static void ComputeMeat(HusbandryModel m, ThingDef def, RaceProperties race)
+        {
+            int stageCount = m.stages.Count;
             m.butcherYieldFactor = (Find.Storyteller != null)
                 ? Find.Storyteller.difficulty.butcherYieldFactor
                 : 1f;
@@ -471,46 +516,53 @@ namespace SimpleFarming
                 }
                 m.stageMeatNutrition[i] = meat * m.meatNutritionPerUnit;
             }
+        }
 
-            // ---- slaughter efficiency ----
-            // Headline number is all-in (fathers' share included); the mother-only figure is
-            // kept per stage as a tooltip subtotal.
+        /// <summary>Per-stage slaughter efficiencies. Headline number is all-in (fathers'
+        /// share included); the mother-only figure is kept per stage as a tooltip subtotal.
+        /// Also picks the best stage to slaughter at.</summary>
+        private static void ComputeEfficiency(HusbandryModel m)
+        {
+            int stageCount = m.stages.Count;
             m.efficiencyToStage = new float[stageCount];
             m.allInEfficiencyToStage = new float[stageCount];
-            if (m.hasMeat)
+            if (!m.hasMeat)
             {
-                float best = float.NegativeInfinity;
-                for (int i = 0; i < stageCount; i++)
+                return;
+            }
+            float best = float.NegativeInfinity;
+            for (int i = 0; i < stageCount; i++)
+            {
+                if (m.stageMeatNutrition[i] <= Epsilon)
                 {
-                    if (m.stageMeatNutrition[i] <= Epsilon)
-                    {
-                        continue; // e.g. a stage with 0 body size
-                    }
-                    float input = m.TotalFoodToStage(i);
-                    m.efficiencyToStage[i] = input > Epsilon
-                        ? m.stageMeatNutrition[i] / input
-                        : 0f;
-                    float allInInput = m.AllInFoodToStage(i);
-                    m.allInEfficiencyToStage[i] = allInInput > Epsilon
-                        ? m.stageMeatNutrition[i] / allInInput
-                        : 0f;
-                    if (m.allInEfficiencyToStage[i] >= best)
-                    {
-                        best = m.allInEfficiencyToStage[i];
-                        m.bestStage = i;
-                    }
+                    continue; // e.g. a stage with 0 body size
+                }
+                float input = m.TotalFoodToStage(i);
+                m.efficiencyToStage[i] = input > Epsilon
+                    ? m.stageMeatNutrition[i] / input
+                    : 0f;
+                float allInInput = m.AllInFoodToStage(i);
+                m.allInEfficiencyToStage[i] = allInInput > Epsilon
+                    ? m.stageMeatNutrition[i] / allInInput
+                    : 0f;
+                if (m.allInEfficiencyToStage[i] >= best)
+                {
+                    best = m.allInEfficiencyToStage[i];
+                    m.bestStage = i;
                 }
             }
+        }
 
-            // ---- pregnant-female advice (live birth only) ----
+        /// <summary>Whether a half-done pregnancy is worth finishing: the newborn litter vs
+        /// the food the remaining gestation still costs (live birth with meat only).</summary>
+        private static void ComputePregnantAdvice(HusbandryModel m)
+        {
             if (!m.isEggLayer && m.hasMeat)
             {
                 m.newbornLitterMeat = m.litterSizeAvg * m.stageMeatNutrition[0];
                 m.remainingGestationFoodAvg = m.cycleDays * m.adultFoodPerDay * 0.5f;
                 m.letBirthPaysOff = m.newbornLitterMeat > m.remainingGestationFoodAvg;
             }
-
-            return m;
         }
 
         private static HusbandryModel Skip(HusbandryModel m, string reason)
@@ -591,6 +643,22 @@ namespace SimpleFarming
 
         // ==================== debug output ====================
 
+        /// <summary>Joins values with "/" for the compact stomach lists shared by the
+        /// info-card value and the debug line.</summary>
+        public static string JoinedSlash(float[] values, string format)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (i > 0)
+                {
+                    sb.Append("/");
+                }
+                sb.Append(values[i].ToString(format));
+            }
+            return sb.ToString();
+        }
+
         /// <summary>One compact line for the dev dump / debug action.</summary>
         public string ToDebugLine()
         {
@@ -634,15 +702,7 @@ namespace SimpleFarming
             }
             if (stageMaxNutrition != null)
             {
-                sb.Append(" stomach=");
-                for (int i = 0; i < stageMaxNutrition.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        sb.Append("/");
-                    }
-                    sb.Append(stageMaxNutrition[i].ToString("0.##"));
-                }
+                sb.Append(" stomach=").Append(JoinedSlash(stageMaxNutrition, "0.##"));
                 sb.Append(" mealsPerDay=");
                 for (int i = 0; i < stageMaxNutrition.Length; i++)
                 {
