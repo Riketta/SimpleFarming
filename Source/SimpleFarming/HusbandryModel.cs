@@ -137,8 +137,9 @@ namespace SimpleFarming
         public float feedingSpace;
 
         /// <summary>[i] = max nutrition the stomach holds in stage i: abstract adult
-        /// MaxNutrition x the stage's bodySizeFactor - matches a pawn's MaxNutrition = 1 x
-        /// BodySize (foodMaxFactor is 1 in vanilla).</summary>
+        /// MaxNutrition x the stage's bodySizeFactor x the stage's foodMaxFactor - matches a
+        /// pawn's MaxNutrition exactly (babies have oversized stomachs: vanilla tiny babies
+        /// run foodMaxFactor 6, juveniles 1.5).</summary>
         public float[] stageMaxNutrition;
 
         /// <summary>[i] = days the animal spends in stage i (this stage's minAge up to the
@@ -405,7 +406,11 @@ namespace SimpleFarming
             m.stageMaxNutrition = new float[m.stages.Count];
             for (int i = 0; i < m.stageMaxNutrition.Length; i++)
             {
-                m.stageMaxNutrition[i] = m.maxNutritionAdult * m.stages[i].def.bodySizeFactor;
+                // A pawn's MaxNutrition = base x bodySizeFactor x foodMaxFactor - the latter
+                // is a pawn-only stat part, vanilla runs 6 on tiny babies and 1.5 on
+                // juveniles. Ignoring it understated young-stage stomachs up to 6x.
+                m.stageMaxNutrition[i] = m.maxNutritionAdult * m.stages[i].def.bodySizeFactor
+                    * m.stages[i].def.foodMaxFactor;
             }
         }
 
