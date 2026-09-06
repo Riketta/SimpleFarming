@@ -83,7 +83,7 @@ Excluding the fathers' share, the same slaughter returns {10}.</SF_EfficiencyTip
   <SF_PregnantAdviceSlaughter>Slaughtering now is fine - the litter does not outvalue the remaining pregnancy feed.</SF_PregnantAdviceSlaughter>
   <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio, herd fed {1}), all raw nutrition eaten vs meat produced, per female per day:
 
-- meat income: +{2} nutrition{6}
+- meat income: +{2} nutrition
 - offspring growth food: -{3} nutrition
 - breeding stock food: -{4} nutrition
 

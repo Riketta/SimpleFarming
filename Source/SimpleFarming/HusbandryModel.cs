@@ -715,7 +715,7 @@ namespace SimpleFarming
                     {
                         sb.Append("/");
                     }
-                    sb.Append(MealsPerDayInStage(i).ToString("0.#"));
+                    sb.Append(MealsPerDayInStage(i).ToString("0.##"));
                 }
             }
             sb.Append(" adultFood=").Append(adultFoodPerDay.ToString("0.##")).Append("/d");
@@ -757,7 +757,7 @@ namespace SimpleFarming
         public string RatioString()
         {
             return malesPerFemale <= 1f
-                ? "1m:" + femalesPerMale.ToString("0.#") + "f"
+                ? "1m:" + femalesPerMale.ToString("0.##") + "f"
                 : malesPerFemale.ToString("0.##") + "m:1f";
         }
     }
