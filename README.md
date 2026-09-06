@@ -17,20 +17,20 @@ animals all work without any per-species hardcoding.
 | reproduction cycle | Gestation (or clutch interval) plus the conception wait. Egg incubation is shown separately. |
 | offspring per female per day | Throughput including the conception/fertilization delay, at the optimal ratio. |
 | meat per female per day | Gross meat nutrition from slaughtering grown offspring. |
-| leather per female per day | Leather from the same slaughter, with the leather type hyperlinked. Hidden for animals without leather. Bonus income - not part of the nutrition math. |
 | food per female per day (incl. males) | Breeding-stock upkeep: raw nutrition for the female plus her share of males, at the assumed feed. |
 
 **Slaughter** (animals with meat only)
 
 | Stat | Meaning |
 | ---- | ------- |
-| adult meat nutrition | Meat units x the meat def's nutrition, at your current difficulty's butcher yield. |
 | food to grow one adult | All-in food per offspring grown to adult - mother's gestation + conception wait + growth food + fathers' share - as raw nutrition of the assumed feed. |
 | max stomach (baby/juvenile/adult) | Stomach capacity per life stage in nutrition. Sets how much the animal can eat per feeding: a food item bigger than the free stomach space wastes the overflow, which is what makes simple meals bad feed for small animals. The tooltip also estimates feeding attempts per growth stage (eat-to-full each time), so you can judge whether a wasteful feed even matters for a short stage. |
 | slaughter efficiency (per life stage) | Meat at that stage divided by the same all-in food. Above 100% the animal returns more nutrition than the operation spends on it. The headline number of the mod; the assumed feed is named in the value. |
 | best slaughter age | Stage with the highest efficiency. |
 | slaughter pregnant females? | Whether the newborn litter outvalues the feed a half-done pregnancy still costs. |
 | net meat per female per day | All-in economics: meat income minus offspring food minus breeding stock (incl. males). Negative = the operation eats more than it returns. Egg/milk/wool/leather income not counted. |
+| adult slaughter meat nutrition | Meat units x the meat def's nutrition from one cleanly slaughtered adult, at your current difficulty's butcher yield. |
+| leather per female per day | Leather from the same slaughter, with the leather type hyperlinked. Hidden for animals without leather. Bonus income - not part of the nutrition math. |
 
 Every row has a tooltip with the full calculation and the raw def numbers behind it.
 

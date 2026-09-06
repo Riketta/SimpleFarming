@@ -19,7 +19,7 @@
   <SF_MeatPerDayLabel>meat per female per day</SF_MeatPerDayLabel>
   <SF_LeatherPerDayLabel>leather per female per day</SF_LeatherPerDayLabel>
   <SF_HerdFoodLabel>food per female per day (incl. males)</SF_HerdFoodLabel>
-  <SF_AdultMeatNutritionLabel>adult meat nutrition</SF_AdultMeatNutritionLabel>
+  <SF_AdultMeatNutritionLabel>adult slaughter meat nutrition</SF_AdultMeatNutritionLabel>
   <SF_FoodPerAdultLabel>food to grow one adult</SF_FoodPerAdultLabel>
   <SF_EfficiencyLabel>slaughter efficiency ({0})</SF_EfficiencyLabel>
   <SF_RecommendedLabel>best slaughter age</SF_RecommendedLabel>
