@@ -329,14 +329,18 @@ namespace SimpleFarming
             m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
 
             // ---- feed selection ----
-            // The herd is assumed fed on the best feed its diet allows: raw pieces (x1.00
-            // baseline), kibble (x1.25), pemmican (x1.60) or simple meals (x1.80) - the last
-            // only when the stomach fits a whole 0.9 meal. Items bigger than the usable
-            // stomach space waste the overflow, which is why meals lose on small animals.
-            // Every food cost below is raw nutrition at this multiplier.
+            // The herd is assumed fed on the best feed its diet allows AND the player enabled:
+            // raw pieces (x1.00 baseline), kibble (x1.25), pemmican (x1.60) or simple meals
+            // (x1.80) - the last only when the stomach fits a whole 0.9 meal. Items bigger
+            // than the usable stomach space waste the overflow. Every food cost below is raw
+            // nutrition at the chosen multiplier.
+            SimpleFarmingSettings s = SimpleFarmingMod.Instance?.settings;
             m.feedMultiplier = 1f;
             m.feedLabel = "raw feed";
-            SelectFeed(m);
+            SelectFeed(m,
+                s != null && s.feedKibble,
+                s != null && s.feedPemmican,
+                s != null && s.feedMeals);
 
             // ---- food ----
             float nutritionPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay
@@ -453,11 +457,21 @@ namespace SimpleFarming
 
         // ---- feed selection ----
 
-        private static void SelectFeed(HusbandryModel m)
+        private static void SelectFeed(HusbandryModel m, bool allowKibble, bool allowPemmican,
+            bool allowMeals)
         {
-            TryFeed(m, "kibble", ThingDefOf.Kibble, "Make_Kibble");
-            TryFeed(m, "pemmican", ThingDefOf.Pemmican, "Make_Pemmican");
-            TryFeed(m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple");
+            if (allowKibble)
+            {
+                TryFeed(m, "kibble", ThingDefOf.Kibble, "Make_Kibble");
+            }
+            if (allowPemmican)
+            {
+                TryFeed(m, "pemmican", ThingDefOf.Pemmican, "Make_Pemmican");
+            }
+            if (allowMeals)
+            {
+                TryFeed(m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple");
+            }
         }
 
         /// <summary>Considers one processed feed: nominal conversion (product nutrition per

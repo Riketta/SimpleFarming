@@ -86,12 +86,20 @@ then eat whole items - anything bigger than the free space is wasted. `MaxNutrit
 body size, so a chicken (stomach 0.3, usable 0.17) can only use 0.17 of a 0.9 meal, giving
 an effective x0.33 - worse than raw. The block picks pemmican for it instead.
 
-Examples of displayed adult-slaughter efficiency (100% butcher yield): chicken **188%**
-(pemmican), ibex **206%** (pemmican), cow **105%** (simple meals). Diets also refuse feeds
-outright and the tooltip says so (wargs refuse everything processed, herbivores refuse
-meat-only feeds). Grazing whole plants (0.5 nutrition) wastes similarly for small animals -
-a chicken absorbs 0.17 per plant (67% lost); the efficiency rows are absorbed-nutrition
-based, so that loss is not charged, and hay pieces or kibble avoid it.
+Examples of displayed adult-slaughter efficiency (100% butcher yield, default feed
+selection = raw + simple meals): chicken **118%** (raw - meals would be x0.33 for its
+stomach, so raw wins), ibex **142%** (simple meals), cow **105%** (simple meals). With
+pemmican enabled in the settings the same animals read 188% / 206% / 105%. Diets also
+refuse feeds outright and the tooltip says so (wargs refuse everything processed,
+herbivores refuse meat-only feeds). Grazing whole plants (0.5 nutrition) wastes similarly
+for small animals - a chicken absorbs 0.17 per plant (67% lost); the efficiency rows are
+absorbed-nutrition based, so that loss is not charged, and hay pieces or kibble avoid it.
+
+**Which feeds are considered is a mod setting** (mod settings -> Simple Farming). By default
+only **raw pieces and simple meals** are enabled - pemmican and kibble are opt-in, since
+they need a butcher table/cooker and hauling work. Disable simple meals to force a raw-feed
+assumption for everything; disable all processed feeds and the block is a pure raw-feed
+calculator. Changes apply immediately.
 
 The tooltip names the assumed feed and its multiplier on every row it applies to; feeding
 raw pieces instead simply scales the food numbers back up (and a marginal farm can dip below
