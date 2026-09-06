@@ -366,12 +366,27 @@ namespace SimpleFarming
                 }
                 stomach.Append(m.stageMaxNutrition[i].ToString("0.##"));
             }
+            // feeding attempts per growth stage (eat-to-full each time); the adult stage is
+            // open-ended, so it is expressed per day instead
+            StringBuilder meals = new StringBuilder();
+            for (int i = 0; i < m.StageCount - 1; i++)
+            {
+                if (i > 0)
+                {
+                    meals.Append("/");
+                }
+                meals.Append((m.MealsPerDayInStage(i) * m.stageSpanDays[i]).ToString("0.#"));
+            }
+            float adultMealsPerDay = m.MealsPerDayInStage(m.StageCount - 1);
             entries.Add(new StatDrawEntry(cat, "SF_StomachLabel".Translate(),
                 stomach + " " + "SF_NutritionWord".Translate(),
                 "SF_StomachTip".Translate(m.maxNutritionAdult.ToString("0.##"),
                     m.wantEatLevel.ToStringPercent(),
                     (1f - m.wantEatLevel).ToStringPercent(),
-                    m.feedingSpace.ToString("0.##")), 9805));
+                    m.feedingSpace.ToString("0.##"),
+                    m.wantEatLevel.ToStringPercent(),
+                    meals.ToString(),
+                    adultMealsPerDay.ToString("0.#")), 9805));
 
             // -- one all-in efficiency row per life stage --
             StringBuilder comparison = new StringBuilder();

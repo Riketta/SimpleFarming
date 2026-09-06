@@ -141,6 +141,10 @@ namespace SimpleFarming
         /// BodySize (foodMaxFactor is 1 in vanilla).</summary>
         public float[] stageMaxNutrition;
 
+        /// <summary>[i] = days the animal spends in stage i (this stage's minAge up to the
+        /// next stage's). The last (adult) entry stays 0 - adult is open-ended.</summary>
+        public float[] stageSpanDays;
+
         /// <summary>Best usable feed's effective multiplier over raw nutrition: 1.00 for raw
         /// pieces, 1.25 kibble / 1.60 pemmican / 1.80 simple meals when the diet allows and
         /// the stomach fits the pieces. All displayed food costs are raw nutrition at this
@@ -246,6 +250,16 @@ namespace SimpleFarming
         public float AllInFoodToStage(int stageIndex)
         {
             return TotalFoodToStage(stageIndex) + maleFoodPerOffspring;
+        }
+
+        /// <summary>Feeding attempts per day while in stage i, assuming each attempt fills
+        /// the stomach from the seek threshold to full: the stage's nutrition rate divided
+        /// by its usable space. Feed-independent - the need drains item nutrition no matter
+        /// what feed carries it.</summary>
+        public float MealsPerDayInStage(int i)
+        {
+            float usable = stageMaxNutrition[i] * (1f - wantEatLevel);
+            return usable > Epsilon ? stageFoodPerDay[i] * feedMultiplier / usable : 0f;
         }
 
         // ==================== construction ====================
@@ -405,6 +419,7 @@ namespace SimpleFarming
             int stageCount = m.stages.Count;
             m.growthFoodToStage = new float[stageCount];
             m.stageFoodPerDay = new float[stageCount];
+            m.stageSpanDays = new float[stageCount];
             for (int i = 0; i < stageCount; i++)
             {
                 m.stageFoodPerDay[i] = m.stages[i].def.hungerRateFactor * race.baseHungerRate
@@ -416,6 +431,7 @@ namespace SimpleFarming
                     * GenDate.DaysPerYear;
                 // The animal spends that span IN stage i-1, so stage i-1's factor applies -
                 // unlike the vanilla debug helper, which charges the next stage's rate.
+                m.stageSpanDays[i - 1] = spanDays;
                 m.growthFoodToStage[i] = m.growthFoodToStage[i - 1]
                     + spanDays * m.stageFoodPerDay[i - 1];
             }
@@ -626,6 +642,15 @@ namespace SimpleFarming
                         sb.Append("/");
                     }
                     sb.Append(stageMaxNutrition[i].ToString("0.##"));
+                }
+                sb.Append(" mealsPerDay=");
+                for (int i = 0; i < stageMaxNutrition.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        sb.Append("/");
+                    }
+                    sb.Append(MealsPerDayInStage(i).ToString("0.#"));
                 }
             }
             sb.Append(" adultFood=").Append(adultFoodPerDay.ToString("0.##")).Append("/d");
