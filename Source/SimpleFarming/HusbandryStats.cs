@@ -216,15 +216,15 @@ namespace SimpleFarming
                         m.adultMeatNutrition.ToString("0.##")) + YieldNote(m), 9840));
             }
 
-            // -- leather per female per day (with leather type; priority sorts it to the
-            //    very end of the block, after the slaughter-meat row) --
+            // -- leather per female per day (with leather type; sits between the adult
+            //    slaughter-meat row and the herd-upkeep row) --
             if (m.leatherDef != null && m.leatherAmount > 1e-6f)
             {
                 float leatherPerDay = m.offspringPerFemalePerDay * m.leatherAmount;
                 entries.Add(new StatDrawEntry(cat, "SF_LeatherPerDayLabel".Translate(),
                     leatherPerDay.ToString("0.##") + " " + m.leatherDef.label,
                     "SF_LeatherPerDayTip".Translate(m.leatherDef.LabelCap,
-                        m.leatherAmount.ToString("0.##"), leatherPerDay.ToString("0.##")) + YieldNote(m), 9680,
+                        m.leatherAmount.ToString("0.##"), leatherPerDay.ToString("0.##")) + YieldNote(m), 9835,
                     null, Gen.YieldSingle(new Dialog_InfoCard.Hyperlink(m.leatherDef))));
             }
 
@@ -338,14 +338,13 @@ namespace SimpleFarming
         {
             int last = m.StageCount - 1;
 
-            // -- adult slaughter meat nutrition (sorted to the end of the block, with
-            //    leather after it) --
+            // -- adult slaughter meat nutrition (right after the meat-per-day row) --
             string yieldNote = YieldNote(m);
             entries.Add(new StatDrawEntry(cat, "SF_AdultMeatNutritionLabel".Translate(),
                 MeatValue(m.adultMeatNutrition, m.adultMeatAmount),
                 "SF_AdultMeatNutritionTip".Translate(m.adultMeatAmount.ToString("0.##"),
                     m.meatNutritionPerUnit.ToString("0.###"), m.adultMeatNutrition.ToString("0.##"),
-                    m.leatherAmount.ToString("0")) + yieldNote, 9681));
+                    m.leatherAmount.ToString("0")) + yieldNote, 9837));
 
             // -- food to grow one adult (all-in: parents + growth, raw nutrition of the feed) --
             float adultGrowth = m.growthFoodToStage[last];
