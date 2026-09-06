@@ -260,6 +260,44 @@ namespace SimpleFarming
                 : "";
         }
 
+        /// <summary>Extended efficiency tooltip block: the same stage's slaughter efficiency
+        /// on every feed - raw as the baseline plus each processed feed - regardless of the
+        /// settings' feed selection (those only pick the feed the headline assumes). Shows
+        /// wasteful feeds with their (worse) value and diet refusals outright.</summary>
+        private static string FeedBreakdown(HusbandryModel m, int stage)
+        {
+            if (m.feedOptions == null)
+            {
+                return "";
+            }
+            float baseEfficiency = m.allInEfficiencyToStage[stage];
+            StringBuilder sb = new StringBuilder();
+            sb.Append("\n\n").Append("SF_FeedBreakdownHeader".Translate(m.feedLabel));
+            for (int i = 0; i < m.feedOptions.Count; i++)
+            {
+                HusbandryModel.FeedOption o = m.feedOptions[i];
+                if (!o.usable)
+                {
+                    sb.Append("\n").Append("SF_FeedBreakdownRefused".Translate(o.label));
+                    continue;
+                }
+                string value = (baseEfficiency * o.multiplier).ToStringPercent();
+                if (i == 0)
+                {
+                    sb.Append("\n").Append("SF_FeedBreakdownBaseline".Translate(o.label, value));
+                }
+                else if (!o.enabled)
+                {
+                    sb.Append("\n").Append("SF_FeedBreakdownOff".Translate(o.label, value));
+                }
+                else
+                {
+                    sb.Append("\n").Append("SF_FeedBreakdownLine".Translate(o.label, value));
+                }
+            }
+            return sb.ToString();
+        }
+
         private static void AddSlaughterEntries(HusbandryModel m, StatCategoryDef cat, List<StatDrawEntry> entries)
         {
             int last = m.StageCount - 1;
@@ -306,6 +344,7 @@ namespace SimpleFarming
                 {
                     tip += "\n\n" + "SF_CurveNote".Translate();
                 }
+                tip += FeedBreakdown(m, i);
                 entries.Add(new StatDrawEntry(cat, "SF_EfficiencyLabel".Translate(stageLabel),
                     m.allInEfficiencyToStage[i].ToStringPercent()
                         + (m.feedMultiplier > 1f ? " (" + m.feedLabel + ")" : ""), tip, 9800 - i * 10));

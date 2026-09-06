@@ -146,6 +146,31 @@ namespace SimpleFarming
         /// "simple meals").</summary>
         public string feedLabel = "raw feed";
 
+        /// <summary>Every feed this herd could be raised on with its effective multiplier over
+        /// raw nutrition: the raw baseline plus each processed feed - regardless of the
+        /// settings' feed selection, which only picks the one the headline numbers assume
+        /// (<see cref="feedMultiplier"/>). Feeds the diet refuses or that have no valid recipe
+        /// are kept as unusable options so the efficiency tooltip can disclose that.</summary>
+        public List<FeedOption> feedOptions;
+
+        /// <summary>One feed type the herd could be raised on.</summary>
+        public class FeedOption
+        {
+            public string label;
+
+            /// <summary>Effective nutrition multiplier over raw feeding: 1.00 raw, 1.25
+            /// kibble, 1.60 pemmican, up to 1.80 simple meals (less when the pieces are
+            /// bigger than the usable stomach space and overflow is wasted).</summary>
+            public float multiplier = 1f;
+
+            /// <summary>False when the diet refuses the feed or its recipe/def is missing.</summary>
+            public bool usable = true;
+
+            /// <summary>Whether the player's settings include this feed for the headline
+            /// numbers. The tooltip lists every option either way.</summary>
+            public bool enabled = true;
+        }
+
         /// <summary>[i] = nutrition eaten from birth until reaching stage i ([0] = 0).</summary>
         public float[] growthFoodToStage;
 
@@ -328,19 +353,33 @@ namespace SimpleFarming
             m.wantEatLevel = race.FoodLevelPercentageWantEat;
             m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
 
-            // ---- feed selection ----
-            // The herd is assumed fed on the best feed its diet allows AND the player enabled:
-            // raw pieces (x1.00 baseline), kibble (x1.25), pemmican (x1.60) or simple meals
-            // (x1.80) - the last only when the stomach fits a whole 0.9 meal. Items bigger
-            // than the usable stomach space waste the overflow. Every food cost below is raw
-            // nutrition at the chosen multiplier.
+            // ---- feed options ----
+            // Compute every feed the diet allows, settings or not: raw pieces (x1.00
+            // baseline), kibble (x1.25), pemmican (x1.60), simple meals (up to x1.80 - items
+            // bigger than the usable stomach space waste the overflow). The player's settings
+            // only pick which of these the headline numbers assume.
             SimpleFarmingSettings s = SimpleFarmingMod.Instance?.settings;
-            m.feedMultiplier = 1f;
-            m.feedLabel = "raw feed";
-            SelectFeed(m,
-                s != null && s.feedKibble,
-                s != null && s.feedPemmican,
+            m.feedOptions = new List<FeedOption>
+            {
+                new FeedOption { label = "raw feed" }
+            };
+            AddFeedOption(m, "kibble", ThingDefOf.Kibble, "Make_Kibble",
+                s != null && s.feedKibble);
+            AddFeedOption(m, "pemmican", ThingDefOf.Pemmican, "Make_Pemmican",
+                s != null && s.feedPemmican);
+            AddFeedOption(m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple",
                 s != null && s.feedMeals);
+            FeedOption chosen = m.feedOptions[0];
+            for (int i = 1; i < m.feedOptions.Count; i++)
+            {
+                FeedOption o = m.feedOptions[i];
+                if (o.usable && o.enabled && o.multiplier > chosen.multiplier)
+                {
+                    chosen = o;
+                }
+            }
+            m.feedMultiplier = chosen.multiplier;
+            m.feedLabel = chosen.label;
 
             // ---- food ----
             float nutritionPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay
@@ -455,35 +494,22 @@ namespace SimpleFarming
             return m;
         }
 
-        // ---- feed selection ----
+        // ---- feed options ----
 
-        private static void SelectFeed(HusbandryModel m, bool allowKibble, bool allowPemmican,
-            bool allowMeals)
+        /// <summary>Considers one processed feed for the option list: nominal conversion
+        /// (product nutrition per raw nutrition per piece, both from def + recipe) times the
+        /// fraction of each piece the animal absorbs before its stomach fills. Diet refusals
+        /// [CanEverEat] and invalid recipes mark the option unusable so the tooltip can
+        /// disclose it; every considered feed lands in the list either way - the settings
+        /// only set <paramref name="enabled"/>.</summary>
+        private static void AddFeedOption(HusbandryModel m, string label, ThingDef foodDef,
+            string recipeName, bool enabled)
         {
-            if (allowKibble)
-            {
-                TryFeed(m, "kibble", ThingDefOf.Kibble, "Make_Kibble");
-            }
-            if (allowPemmican)
-            {
-                TryFeed(m, "pemmican", ThingDefOf.Pemmican, "Make_Pemmican");
-            }
-            if (allowMeals)
-            {
-                TryFeed(m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple");
-            }
-        }
-
-        /// <summary>Considers one processed feed: nominal conversion (product nutrition per
-        /// raw nutrition per piece, both from def + recipe) times the fraction of each piece
-        /// the animal absorbs before its stomach fills. Diet refusals [CanEverEat] and
-        /// overeating waste (item bigger than the usable space) disqualify it. Kept only if
-        /// it beats everything considered so far.</summary>
-        private static void TryFeed(HusbandryModel m, string label, ThingDef foodDef,
-            string recipeName)
-        {
+            FeedOption option = new FeedOption { label = label, enabled = enabled };
+            m.feedOptions.Add(option);
             if (foodDef == null || !m.def.race.CanEverEat(foodDef))
             {
+                option.usable = false;
                 return;
             }
             RecipeDef recipe = DefDatabase<RecipeDef>.GetNamedSilentFail(recipeName);
@@ -491,6 +517,7 @@ namespace SimpleFarming
             if (recipe == null || recipe.products.Count == 0 || recipe.ingredients.Count == 0
                 || itemNutrition <= Epsilon)
             {
+                option.usable = false;
                 return;
             }
             float rawNutrition = 0f;
@@ -499,12 +526,7 @@ namespace SimpleFarming
                 rawNutrition += recipe.ingredients[i].GetBaseCount();
             }
             float nominal = itemNutrition / Mathf.Max(rawNutrition / recipe.products[0].count, Epsilon);
-            float mult = nominal * Mathf.Min(1f, m.feedingSpace / itemNutrition);
-            if (mult > m.feedMultiplier)
-            {
-                m.feedMultiplier = mult;
-                m.feedLabel = label;
-            }
+            option.multiplier = nominal * Mathf.Min(1f, m.feedingSpace / itemNutrition);
         }
 
         /// <summary>Inverts a monotonic piecewise-linear SimpleCurve. Returns NaN when the
@@ -563,6 +585,27 @@ namespace SimpleFarming
             }
             sb.Append(" offspring/day=").Append(offspringPerFemalePerDay.ToString("0.###"));
             sb.Append(" feed=").Append(feedLabel).Append(" x").Append(feedMultiplier.ToString("0.##"));
+            if (feedOptions != null)
+            {
+                sb.Append(" feeds=");
+                for (int i = 0; i < feedOptions.Count; i++)
+                {
+                    FeedOption o = feedOptions[i];
+                    if (i > 0)
+                    {
+                        sb.Append(", ");
+                    }
+                    sb.Append(o.label).Append(" x").Append(o.multiplier.ToString("0.##"));
+                    if (!o.usable)
+                    {
+                        sb.Append("(refused)");
+                    }
+                    else if (!o.enabled)
+                    {
+                        sb.Append("(off)");
+                    }
+                }
+            }
             sb.Append(" adultFood=").Append(adultFoodPerDay.ToString("0.##")).Append("/d");
             sb.Append(" herdFood=").Append(herdFoodPerFemalePerDay.ToString("0.##")).Append("/d");
             if (leatherDef != null && leatherAmount > 1e-6f)

@@ -98,6 +98,12 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
 
   <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the best feed this animal's diet and stomach allow. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>
 
+  <SF_FeedBreakdownHeader>Efficiency by feed (current: {0}):</SF_FeedBreakdownHeader>
+  <SF_FeedBreakdownBaseline>    {0}: {1} (baseline)</SF_FeedBreakdownBaseline>
+  <SF_FeedBreakdownLine>    {0}: {1}</SF_FeedBreakdownLine>
+  <SF_FeedBreakdownOff>    {0}: {1} (off in settings)</SF_FeedBreakdownOff>
+  <SF_FeedBreakdownRefused>    {0}: refused by diet</SF_FeedBreakdownRefused>
+
   <!-- ==================== Feed choice (mod settings) ==================== -->
   <SimpleFarming_FeedChoiceHeader>Feeds considered for the assumed herd feed</SimpleFarming_FeedChoiceHeader>
   <SimpleFarming_FeedKibble>Consider kibble (x1.25)</SimpleFarming_FeedKibble>

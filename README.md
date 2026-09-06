@@ -105,6 +105,12 @@ The tooltip names the assumed feed and its multiplier on every row it applies to
 raw pieces instead simply scales the food numbers back up (and a marginal farm can dip below
 100% again).
 
+Each slaughter-efficiency tooltip also breaks that stage's efficiency down **per feed** -
+raw baseline, kibble, pemmican, simple meals - no matter what the settings' feed selection
+says. Feeds switched off in the settings are marked "(off in settings)", feeds the animal's
+diet refuses are listed as refused, and wasteful feeds simply show their (lower) percentage.
+The settings only decide which feed the headline numbers assume.
+
 ## Assumptions & limits
 
 - Fed, healthy, fertile adults; no miscarriages, no age fertility falloff.
