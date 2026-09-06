@@ -441,7 +441,8 @@ namespace SimpleFarming
                         (eggsPerDay * eggNutrition).ToString("0.##"));
                 }
                 entries.Add(new StatDrawEntry(cat, "SF_NetPerDayLabel".Translate(),
-                    net.ToString("+0.00;-0.00") + " " + "SF_NutritionWord".Translate(),
+                    net.ToString("+0.00;-0.00") + " " + "SF_NutritionWord".Translate()
+                        + MeatUnitsFragment(m, net, "+0.##;-0.##"),
                     "SF_NetPerDayTip".Translate(StageLabel(m, best), m.feedLabel,
                         meatPerDay.ToString("0.00"),
                         offspringFoodPerDay.ToString("0.00"),
