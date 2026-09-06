@@ -136,6 +136,16 @@ namespace SimpleFarming
         /// be worse than raw pieces for small animals.</summary>
         public float feedingSpace;
 
+        /// <summary>Best usable feed's effective multiplier over raw nutrition: 1.00 for raw
+        /// pieces, 1.25 kibble / 1.60 pemmican / 1.80 simple meals when the diet allows and
+        /// the stomach fits the pieces. All displayed food costs are raw nutrition at this
+        /// multiplier.</summary>
+        public float feedMultiplier = 1f;
+
+        /// <summary>Label of the assumed herd feed ("raw feed", "kibble", "pemmican",
+        /// "simple meals").</summary>
+        public string feedLabel = "raw feed";
+
         /// <summary>[i] = nutrition eaten from birth until reaching stage i ([0] = 0).</summary>
         public float[] growthFoodToStage;
 
@@ -313,8 +323,24 @@ namespace SimpleFarming
             m.cycleDaysWithDelay = m.cycleDays + delayDaysPerCycle;
             m.offspringPerFemalePerDay = m.litterSizeAvg / Mathf.Max(m.cycleDaysWithDelay, Epsilon);
 
+            // ---- feeding space / overeating ----
+            m.maxNutritionAdult = def.GetStatValueAbstract(StatDefOf.MaxNutrition);
+            m.wantEatLevel = race.FoodLevelPercentageWantEat;
+            m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
+
+            // ---- feed selection ----
+            // The herd is assumed fed on the best feed its diet allows: raw pieces (x1.00
+            // baseline), kibble (x1.25), pemmican (x1.60) or simple meals (x1.80) - the last
+            // only when the stomach fits a whole 0.9 meal. Items bigger than the usable
+            // stomach space waste the overflow, which is why meals lose on small animals.
+            // Every food cost below is raw nutrition at this multiplier.
+            m.feedMultiplier = 1f;
+            m.feedLabel = "raw feed";
+            SelectFeed(m);
+
             // ---- food ----
-            float nutritionPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay; // x1.6
+            float nutritionPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay
+                / m.feedMultiplier;
             float adultFactor = m.AdultStage.def.hungerRateFactor;
             m.adultFoodPerDay = adultFactor * race.baseHungerRate * nutritionPerDayPerHungerRate;
             m.herdFoodPerFemalePerDay = m.adultFoodPerDay * (1f + m.malesPerFemale);
@@ -322,11 +348,6 @@ namespace SimpleFarming
             m.conceptionFoodPerOffspring = delayDaysPerCycle / m.litterSizeAvg * m.adultFoodPerDay;
             m.maleFoodPerOffspring = m.malesPerFemale
                 * (m.gestationFoodPerOffspring + m.conceptionFoodPerOffspring);
-
-            // ---- feeding space / overeating ----
-            m.maxNutritionAdult = def.GetStatValueAbstract(StatDefOf.MaxNutrition);
-            m.wantEatLevel = race.FoodLevelPercentageWantEat;
-            m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
 
             int stageCount = m.stages.Count;
             m.growthFoodToStage = new float[stageCount];
@@ -430,6 +451,48 @@ namespace SimpleFarming
             return m;
         }
 
+        // ---- feed selection ----
+
+        private static void SelectFeed(HusbandryModel m)
+        {
+            TryFeed(m, "kibble", ThingDefOf.Kibble, "Make_Kibble");
+            TryFeed(m, "pemmican", ThingDefOf.Pemmican, "Make_Pemmican");
+            TryFeed(m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple");
+        }
+
+        /// <summary>Considers one processed feed: nominal conversion (product nutrition per
+        /// raw nutrition per piece, both from def + recipe) times the fraction of each piece
+        /// the animal absorbs before its stomach fills. Diet refusals [CanEverEat] and
+        /// overeating waste (item bigger than the usable space) disqualify it. Kept only if
+        /// it beats everything considered so far.</summary>
+        private static void TryFeed(HusbandryModel m, string label, ThingDef foodDef,
+            string recipeName)
+        {
+            if (foodDef == null || !m.def.race.CanEverEat(foodDef))
+            {
+                return;
+            }
+            RecipeDef recipe = DefDatabase<RecipeDef>.GetNamedSilentFail(recipeName);
+            float itemNutrition = foodDef.GetStatValueAbstract(StatDefOf.Nutrition);
+            if (recipe == null || recipe.products.Count == 0 || recipe.ingredients.Count == 0
+                || itemNutrition <= Epsilon)
+            {
+                return;
+            }
+            float rawNutrition = 0f;
+            for (int i = 0; i < recipe.ingredients.Count; i++)
+            {
+                rawNutrition += recipe.ingredients[i].GetBaseCount();
+            }
+            float nominal = itemNutrition / Mathf.Max(rawNutrition / recipe.products[0].count, Epsilon);
+            float mult = nominal * Mathf.Min(1f, m.feedingSpace / itemNutrition);
+            if (mult > m.feedMultiplier)
+            {
+                m.feedMultiplier = mult;
+                m.feedLabel = label;
+            }
+        }
+
         /// <summary>Inverts a monotonic piecewise-linear SimpleCurve. Returns NaN when the
         /// curve is null (identity - callers handle), degenerate, or not strictly increasing
         /// (a modded weird curve - callers fall back to linear scaling).</summary>
@@ -485,6 +548,7 @@ namespace SimpleFarming
                 sb.Append(" hatch=").Append(hatchDays.ToString("0.##")).Append("d");
             }
             sb.Append(" offspring/day=").Append(offspringPerFemalePerDay.ToString("0.###"));
+            sb.Append(" feed=").Append(feedLabel).Append(" x").Append(feedMultiplier.ToString("0.##"));
             sb.Append(" adultFood=").Append(adultFoodPerDay.ToString("0.##")).Append("/d");
             sb.Append(" herdFood=").Append(herdFoodPerFemalePerDay.ToString("0.##")).Append("/d");
             if (leatherDef != null && leatherAmount > 1e-6f)

@@ -52,32 +52,49 @@
   <SF_OffspringPerDayTipEgg>{0} eggs per clutch, one clutch every {1} days ({2} days including the average fertilization wait) gives {3} hatchlings per female per day with ample males.</SF_OffspringPerDayTipEgg>
   <SF_MeatPerDayTip>Growing the offspring to adults and slaughtering them yields {0} meat nutrition per female per day ({1} offspring/day x {2} nutrition each) - before subtracting their growth food, and before the females' and males' own upkeep.\n\nMilk, wool, edible eggs and leather are extra on top of this.</SF_MeatPerDayTip>
   <SF_LeatherPerDayTip>The same slaughter also yields {0}: {1} units per grown adult, or {2} units per female per day at the offspring rate above (same grown-adult basis as the meat row).\n\nLeather scales with the slaughter stage's body size factor and is a bonus on top of the meat numbers - it is not counted in any nutrition efficiency or the net row.</SF_LeatherPerDayTip>
-  <SF_HerdFoodTip>A female eats {0} nutrition per day. Adding her share of breeding males ({1} males per female at the same food rate) gives {2} nutrition per female per day of breeding stock upkeep.\n\nFood eaten by offspring while growing is counted separately, per animal grown (see 'food to grow one adult').</SF_HerdFoodTip>
-  <SF_AdultMeatNutritionTip>{0} units of meat x {1} nutrition each = {2} nutrition from a cleanly slaughtered adult.\n\nLeather: {3} units (not counted as food anywhere in this block).\nAnimals killed by damage instead of careful slaughter yield only 66% meat and leather.</SF_AdultMeatNutritionTip>
-  <SF_FoodPerAdultTip>Nutrition the farm spends to produce one grown adult, all factors included:\n\n- mother's food while gestating: {0}\n- mother's food while awaiting conception: {1}\n- offspring's growth food, birth to adult: {2}\n- fathers' share (breeding males at the optimal ratio): {3}\n\nTotal: {4} nutrition per adult. The slaughter efficiency rows below divide each stage's meat by the same kind of all-in figure.
+  <SF_HerdFoodTip>A female eats {0} nutrition per day of the assumed feed; adding her share of breeding males ({1} per female) gives {2} nutrition per female per day of breeding-stock upkeep (raw nutrition).
 
-Assumes raw feed; feed processing multipliers depend on the animal's stomach size - see the slaughter efficiency rows for this animal's exact feed list.</SF_FoodPerAdultTip>
-  <SF_EfficiencyTip>Slaughter as {0} - all-in nutrition efficiency, the steady-state farm economics:\n\n- meat returned: {1} nutrition\n- food spent per offspring: {2}\n    - {3} mother's gestation food\n    - {4} mother's conception-wait food\n    - {5} own growth food to this stage\n    - {6} fathers' share\n\nEfficiency: {1} / {2} = {7}. Above 100% the farm grows more food than it eats; below 100% it burns nutrition (grazing makes food free-ish and can still make it worthwhile).\n\nExcluding the fathers' share, the same slaughter returns {8}.</SF_EfficiencyTip>
+Offspring food is counted separately, per animal grown.</SF_HerdFoodTip>
+  <SF_AdultMeatNutritionTip>{0} units of meat x {1} nutrition each = {2} nutrition from a cleanly slaughtered adult.\n\nLeather: {3} units (not counted as food anywhere in this block).\nAnimals killed by damage instead of careful slaughter yield only 66% meat and leather.</SF_AdultMeatNutritionTip>
+  <SF_FoodPerAdultTip>Nutrition the farm spends to produce one grown adult, all factors included (raw nutrition of the assumed feed):
+
+- mother's food while gestating: {0}
+- mother's food while awaiting conception: {1}
+- offspring's growth food, birth to adult: {2}
+- fathers' share (breeding males at the optimal ratio): {3}
+
+Total: {4} nutrition per adult. The slaughter efficiency rows below divide each stage's meat by the same kind of figure.</SF_FoodPerAdultTip>
+  <SF_EfficiencyTip>Slaughter as {0}, herd fed {1} (x{2} over raw food):
+
+- meat returned: {3} nutrition
+- food spent per offspring (raw nutrition of that feed): {4}
+    - {5} mother's gestation food
+    - {6} mother's conception-wait food
+    - {7} own growth food to this stage
+    - {8} fathers' share
+
+Efficiency: {3} / {4} = {9}. Above 100% the animal returns more food than the operation spends on it.
+
+Excluding the fathers' share, the same slaughter returns {10}.</SF_EfficiencyTip>
   <SF_EfficiencyStagesTip>For comparison:\n{0}</SF_EfficiencyStagesTip>
   <SF_RecommendedTip>{0}\n\nSlaughter age with the best all-in nutrition return per food spent (parents' and offspring's food, fathers included). Cheaper food (grazing) or extra products (milk, wool, leather, eggs) can shift the real answer.</SF_RecommendedTip>
   <SF_PregnantAdviceTip>A randomly picked pregnant female is on average halfway through gestation: about {0} days x {1} nutrition/day = {2} nutrition left to spend on the pregnancy.\n\nThe newborn litter would return {3} nutrition (slaughtered immediately).\n\n{4}</SF_PregnantAdviceTip>
   <SF_PregnantAdviceLet>Let her give birth - the litter outvalues the remaining pregnancy feed. Letting offspring grow past birth only pays if the grown-stage efficiency above exceeds 100%.</SF_PregnantAdviceLet>
   <SF_PregnantAdviceSlaughter>Slaughtering now is fine - the litter does not outvalue the remaining pregnancy feed.</SF_PregnantAdviceSlaughter>
-  <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio), all food actually eaten vs meat produced, per female per day:\n\n- meat income: +{1}\n- offspring growth food: -{2}\n- breeding stock food: -{3} (female {4} + male share {5})\n\nNet: {6} nutrition per female per day. This row and the efficiency rows use the same all-in accounting (one is per day, the other per offspring). Egg, milk and wool income and leather are not counted.
+  <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio, herd fed {1}), all raw nutrition eaten vs meat produced, per female per day:
 
-Assumes raw feed; per-feed multipliers depend on stomach size (see the slaughter efficiency rows) and can turn a negative net positive - at the cost of pawn work.</SF_NetPerDayTip>
+- meat income: +{2}
+- offspring growth food: -{3}
+- breeding stock food: -{4}
+
+Net: {5} nutrition per female per day. Same all-in accounting as the efficiency rows (per day instead of per offspring). Egg, milk and wool income and leather are not counted.</SF_NetPerDayTip>
   <SF_NetEggsNote>For eggs instead of meat: an unfertilized-egg pen needs no males at all - {0}/day of hen upkeep vs {1}/day of egg nutrition, without hatching or butchering work.</SF_NetEggsNote>
   <SF_DifficultyYieldNote>Your difficulty's butcher yield x{0} is included.</SF_DifficultyYieldNote>
   <SF_CurveNote>The game's meat post-processing boosts small yields (minimum ~14 meat before body-size scaling tapers off at 40), so small life stages return more meat than a straight body-size proportion of the adult - exactly what butchering yields in game.</SF_CurveNote>
   <SF_EfficiencyComparisonLine>{0}: {1}</SF_EfficiencyComparisonLine>
 
+
 
-  <SF_FeedListHeader>Feed multipliers vs the raw hay/meat baseline (adult stomach {0} nutrition, eating starts below {1}% full, {2} usable per feeding - growing young have smaller stomachs and waste more):</SF_FeedListHeader>
-  <SF_FeedLineRaw>- raw hay / raw meat pieces: x1.00</SF_FeedLineRaw>
-  <SF_FeedLine>- {0}: x{1}</SF_FeedLine>
-  <SF_FeedLinePartial>- {0}: x{1} - only {2} of {3} nutrition fits per feeding</SF_FeedLinePartial>
-  <SF_FeedLineWorse>- {0}: x{1} - only {2} of {3} fits, WORSE than raw feed</SF_FeedLineWorse>
-  <SF_FeedRefused>- {0}: refused by diet</SF_FeedRefused>
-  <SF_FeedGrazeWaste>- grazing whole plants (~0.5 nutrition) wastes ~{0}% per plant at this stomach size - hay pieces or kibble avoid this</SF_FeedGrazeWaste>
 
+  <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the best feed this animal's diet and stomach allow. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>
 </LanguageData>

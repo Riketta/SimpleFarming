@@ -7,6 +7,9 @@
     <LangVersion>9.0</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\Assemblies</OutputPath>
+    <!-- Mods ship as Release builds only: Debug JIT output is slower and larger. Explicit
+         -c Debug is still possible for IDE debugging, but bare `dotnet build` = Release. -->
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
     <DebugType>embedded</DebugType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- RimWorld loads plain mod assemblies; no deps.json needed next to the dll. -->

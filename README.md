@@ -5,8 +5,6 @@ tab): optimal breeding ratios, reproduction timing, food costs and slaughter nut
 efficiency - computed live from each animal's own def data, so vanilla, DLC and modded
 animals all work without any per-species hardcoding.
 
-Requires the [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077) mod.
-
 ## What the block shows
 
 **Breeding**
@@ -20,18 +18,18 @@ Requires the [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=20
 | offspring per female per day | Throughput including the conception/fertilization delay, at the optimal ratio. |
 | meat per female per day | Gross meat nutrition from slaughtering grown offspring. |
 | leather per female per day | Leather from the same slaughter, with the leather type hyperlinked. Hidden for animals without leather. Bonus income - not part of the nutrition math. |
-| food per female per day (incl. males) | Breeding-stock upkeep: female food plus her share of males. |
+| food per female per day (incl. males) | Breeding-stock upkeep: raw nutrition for the female plus her share of males, at the assumed feed. |
 
 **Slaughter** (animals with meat only)
 
 | Stat | Meaning |
 | ---- | ------- |
 | adult meat nutrition | Meat units x the meat def's nutrition, at your current difficulty's butcher yield. |
-| food to grow one adult | All-in food per offspring: mother's gestation + conception wait + growth food + fathers' share. |
-| slaughter efficiency (per life stage) | Meat at that stage divided by the same all-in food. Above 100% the animal returns more food than the operation spends on it. The headline number of the mod. |
+| food to grow one adult | All-in food per offspring grown to adult - mother's gestation + conception wait + growth food + fathers' share - as raw nutrition of the assumed feed. |
+| slaughter efficiency (per life stage) | Meat at that stage divided by the same all-in food. Above 100% the animal returns more nutrition than the operation spends on it. The headline number of the mod; the assumed feed is named in the value. |
 | best slaughter age | Stage with the highest efficiency. |
 | slaughter pregnant females? | Whether the newborn litter outvalues the feed a half-done pregnancy still costs. |
-| net meat per female per day | All-in economics: meat income minus offspring food minus breeding stock (incl. males). Egg/milk/wool/leather income not counted. |
+| net meat per female per day | All-in economics: meat income minus offspring food minus breeding stock (incl. males). Negative = the operation eats more than it returns. Egg/milk/wool/leather income not counted. |
 
 Every row has a tooltip with the full calculation and the raw def numbers behind it.
 
@@ -63,69 +61,49 @@ All mechanics mirror the live game code (1.6 sources):
   not modeled.
 - **Slaughter efficiency(stage)** = stage meat nutrition / all-in food to that stage, where
   all-in = mother's gestation food + mother's conception-wait food + offspring growth food +
-  fathers' share (breeding males at the optimal ratio eat alongside her every day). Above
-  100% the animal returns more food than the operation spends on it.
+  fathers' share (breeding males at the optimal ratio eat alongside her every day), divided
+  by the assumed feed's multiplier (see below). Above 100% the animal returns more nutrition
+  than the operation spends on it.
 - **Pregnant females**: a randomly picked pregnant female is on average half done, so let
   her give birth when the newborn litter's meat beats the remaining feed.
 
-### Compared to the wiki / the vanilla dev table
+## Assumed feed: raw, kibble, pemmican or meals
 
-Numbers come out lower than community tables on purpose, because more factors are counted.
-The wiki's butchery table skips the conception wait; its per-animal pages also skip the
-fathers' share; the vanilla dev tool (`DebugOutputsEconomy`) additionally reports hunger-rate
-units instead of nutrition and mis-attributes growth food to the next life stage. Example,
-ibex adult slaughter: **129%** here (all-in) vs 161.3% on the wiki page vs 200% from the dev
-tool - same game, different accounting. Every row tooltip shows exactly what is counted.
+All food numbers are **raw nutrition** - what the farm actually has to grow, harvest or
+cook. The block assumes the herd is fed on the **best feed the animal's diet and stomach
+allow**, and applies that feed's multiplier to every food number:
 
-Meat values include the current difficulty's butcher yield (x0.9 / x0.8 on the harder
-presets, 1.0 otherwise); the tooltip discloses the factor whenever it is not 100%.
+| Feed | Nominal | Effective for |
+| ---- | ------- | ------------- |
+| raw pieces (hay / raw meat) | x1.00 | everyone - the baseline |
+| kibble (0.05 per piece; 2.0 raw -> 2.5) | x1.25 | everyone whose diet allows it - pieces never waste |
+| pemmican (0.05 per piece; 0.5 raw -> 0.8) | x1.60 | same - the usual best feed |
+| simple meal (0.9 per meal; 0.5 raw -> 0.9) | x1.80 | only animals whose usable stomach space is 0.9+ (cows and other large animals); smaller ones waste the overflow and end up worse than raw |
 
-## Feeding: raw feed, stomach size and overeating
+**Why meals don't scale down**: animals only seek food when their stomach is below a
+diet-dependent level (herbivores 45% full, carnivores/omnivores 30%, egg-eaters 40%) and
+then eat whole items - anything bigger than the free space is wasted. `MaxNutrition` = 1 x
+body size, so a chicken (stomach 0.3, usable 0.17) can only use 0.17 of a 0.9 meal, giving
+an effective x0.33 - worse than raw. The block picks pemmican for it instead.
 
-All food numbers assume **raw** feed (grass, hay, raw meat) fully absorbed. Meat output never
-changes with feed type - what changes is how much raw nutrition the farm must spend:
+Examples of displayed adult-slaughter efficiency (100% butcher yield): chicken **188%**
+(pemmican), ibex **206%** (pemmican), cow **105%** (simple meals). Diets also refuse feeds
+outright and the tooltip says so (wargs refuse everything processed, herbivores refuse
+meat-only feeds). Grazing whole plants (0.5 nutrition) wastes similarly for small animals -
+a chicken absorbs 0.17 per plant (67% lost); the efficiency rows are absorbed-nutrition
+based, so that loss is not charged, and hay pieces or kibble avoid it.
 
-| Feed | Nominal | Note |
-| ---- | ------- | ---- |
-| raw pieces (hay / raw meat) | x1.00 | baseline |
-| kibble (0.05 per piece) | x1.25 | 2.0 raw -> 2.5; pieces are tiny, never wastes |
-| pemmican (0.05 per piece) | x1.60 | 0.5 raw -> 0.8; never wastes |
-| simple meal (0.9 per meal) | x1.80 | wastes on small stomachs - see below |
-
-**Overeating**: animals only seek food when their stomach is below a diet-dependent level
-(herbivores 45% full, carnivores/omnivores 30%, egg-eaters 40%) and then eat whole items.
-Anything bigger than the free space is wasted, so the effective multiplier for a feed item of
-size N is `nominal x min(1, usableSpace / N)`. Kibble and pemmican pieces are 0.05 and never
-waste; a 0.9 simple meal does not fit small stomachs at all:
-
-| Animal (adult) | Stomach | Usable | Simple meals | |
-| -------------- | ------- | ------ | ------------ | - |
-| Cow (2.4) | 2.40 | 1.32 | x1.80 | fits fully |
-| Ibex (1.0) | 1.00 | 0.55 | x1.10 | 0.35 of every meal wasted |
-| Turkey (0.6) | 0.60 | 0.33 | x0.66 | worse than raw |
-| Chicken (0.3) | 0.30 | 0.17 | x0.33 | worse than raw |
-| Rat (0.2, omnivore) | 0.20 | 0.14 | x0.28 | worse than raw |
-
-`MaxNutrition` = 1 x body size; the want-to-eat level is a diet property (45% herbivores, 30%
-carnivores/omnivores, 40% egg-eaters). So cooked meals only pay off for animals with a
-stomach of 0.5+ nutrition (fully from 1.2+), while kibble and pemmican are the reliable way
-to run a marginal farm at a profit - e.g. chicken adult meat goes from 105% raw-fed to 132%
-on kibble (and the net row from -0.02 to +0.33 per hen per day) at a 0.84 butcher yield.
-Diets also refuse feeds outright; the tooltip marks those (wargs refuse everything
-processed, herbivores refuse meat-only feeds).
-
-Grazing whole plants (0.5 nutrition each) has the same waste problem for small animals: a
-chicken absorbs only 0.17 of every plant (67% wasted). The efficiency rows are
-absorbed-nutrition based, so that loss is not charged - feeding hay pieces or kibble instead
-of grazing avoids it.
-
-All of the above is computed per animal and listed in the slaughter efficiency tooltips.
+The tooltip names the assumed feed and its multiplier on every row it applies to; feeding
+raw pieces instead simply scales the food numbers back up (and a marginal farm can dip below
+100% again).
 
 ## Assumptions & limits
 
 - Fed, healthy, fertile adults; no miscarriages, no age fertility falloff.
 - "Optimal ratio" assumes the herd stays together so males find fertile females; round up in
   practice.
+- The feed multiplier is a potential, not free: kibble and pemmican need stove/butcher-table
+  work and hauling to the pen. Strict carnivores (wargs) refuse everything processed.
 - Milk, wool and unfertilized-egg income are not counted (vanilla shows them separately);
   leather is displayed but is not food.
 - Offspring kept as breeding stock is not slaughter income.
@@ -147,25 +125,23 @@ About/                       mod metadata
 Defs/                        the "farming" StatCategoryDef
 Languages/English/Keyed/     labels, values and tooltips
 Source/SimpleFarming/        C# source + csproj
-Assemblies/                  SimpleFarming.dll (Harmony is compile-time only via the
-                             Lib.Harmony package, not shipped - players use the
-                             Workshop Harmony mod)
+Assemblies/                  SimpleFarming.dll + bundled 0Harmony.dll
 ```
 
 Code layout: `HusbandryModel` (math), `HusbandryStats` (stat rows + tooltips),
 `HarmonyPatches` (one postfix on `RaceProperties.SpecialDisplayStats`), `SimpleFarmingMod`
 (settings), `FarmingLog`, `FarmingDebugActions`.
 
-## Build from source
+## Building
 
-Requires the .NET SDK. The csproj defaults to `E:\SteamLibrary\steamapps\common\RimWorld`;
-override with your install path. Build the Release configuration for the dll you ship -
-a plain `dotnet build` defaults to Debug:
+Requires the .NET SDK. Builds in **Release** - the csproj defaults to it (mods ship as
+Release only; pass `-c Debug` explicitly if you ever need a debug build). The csproj defaults
+to the game at `E:\SteamLibrary\steamapps\common\RimWorld`; override with your install
+path:
 
 ```
 cd Source/SimpleFarming
 dotnet build -c Release -p:RimWorldDir="C:\Path\To\RimWorld"
 ```
 
-The output lands in `Assemblies/SimpleFarming.dll`; the whole `SimpleFarming` folder can
-be copied or symlinked into the game's `Mods` directory.
+The whole `SimpleFarming` folder can be symlinked or copied into the game's `Mods` directory.
