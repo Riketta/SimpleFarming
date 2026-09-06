@@ -443,13 +443,13 @@ namespace SimpleFarming
                 }
                 entries.Add(new StatDrawEntry(cat, "SF_NetPerDayLabel".Translate(),
                     net.ToString("+0.00;-0.00") + " " + "SF_NutritionWord".Translate()
-                        + MeatUnitsFragment(m, meatPerDay, "SF_MeatUnitsPerDay", "0.##"),
+                        + MeatUnitsFragment(m, meatPerDay, "SF_MeatUnits", "0.##"),
                     "SF_NetPerDayTip".Translate(StageLabel(m, best), m.feedLabel,
                         meatPerDay.ToString("0.00"),
                         offspringFoodPerDay.ToString("0.00"),
                         m.herdFoodPerFemalePerDay.ToString("0.00"),
                         net.ToString("+0.00;-0.00"),
-                        MeatUnitsFragment(m, meatPerDay, "SF_MeatUnitsPerDay", "0.##"))
+                        MeatUnitsFragment(m, meatPerDay, "SF_MeatUnits", "0.##"))
                         + eggsNote + yieldNote, 9695));
             }
 

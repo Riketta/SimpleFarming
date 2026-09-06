@@ -58,20 +58,20 @@ Offspring food is counted separately, per animal grown.</SF_HerdFoodTip>
   <SF_AdultMeatNutritionTip>{0} units of meat x {1} nutrition each = {2} nutrition from a cleanly slaughtered adult.\n\nLeather: {3} units (not counted as food anywhere in this block).\nAnimals killed by damage instead of careful slaughter yield only 66% meat and leather.</SF_AdultMeatNutritionTip>
   <SF_FoodPerAdultTip>Nutrition the farm spends to produce one grown adult, all factors included (raw nutrition of the assumed feed):
 
-- mother's food while gestating: {0}
-- mother's food while awaiting conception: {1}
-- offspring's growth food, birth to adult: {2}
-- fathers' share (breeding males at the optimal ratio): {3}
+- mother's food while gestating: {0} nutrition
+- mother's food while awaiting conception: {1} nutrition
+- offspring's growth food, birth to adult: {2} nutrition
+- fathers' share (breeding males at the optimal ratio): {3} nutrition
 
 Total: {4} nutrition per adult. The slaughter efficiency rows below divide each stage's meat by the same kind of figure.</SF_FoodPerAdultTip>
   <SF_EfficiencyTip>Slaughter as {0}, herd fed {1} (x{2} over raw food):
 
 - meat returned: {3} nutrition ({11})
 - food spent per offspring (raw nutrition of that feed): {4}
-    - {5} mother's gestation food
-    - {6} mother's conception-wait food
-    - {7} own growth food to this stage
-    - {8} fathers' share
+    - mother's gestation food: {5} nutrition
+    - mother's conception-wait food: {6} nutrition
+    - own growth food to this stage: {7} nutrition
+    - fathers' share: {8} nutrition
 
 Efficiency: {3} / {4} = {9}. Above 100% the animal returns more food than the operation spends on it.
 
@@ -83,12 +83,12 @@ Excluding the fathers' share, the same slaughter returns {10}.</SF_EfficiencyTip
   <SF_PregnantAdviceSlaughter>Slaughtering now is fine - the litter does not outvalue the remaining pregnancy feed.</SF_PregnantAdviceSlaughter>
   <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio, herd fed {1}), all raw nutrition eaten vs meat produced, per female per day:
 
-- meat income: +{2}{6}
-- offspring growth food: -{3}
-- breeding stock food: -{4}
+- meat income: +{2} nutrition{6}
+- offspring growth food: -{3} nutrition
+- breeding stock food: -{4} nutrition
 
 Net: {5} nutrition per female per day. Same all-in accounting as the efficiency rows (per day instead of per offspring). Egg, milk and wool income and leather are not counted.</SF_NetPerDayTip>
-  <SF_NetEggsNote>For eggs instead of meat: an unfertilized-egg pen needs no males at all - {0}/day of hen upkeep vs {1}/day of egg nutrition, without hatching or butchering work.</SF_NetEggsNote>
+  <SF_NetEggsNote>For eggs instead of meat: an unfertilized-egg pen needs no males at all - {0} nutrition/day of hen upkeep vs {1}/day of egg nutrition, without hatching or butchering work.</SF_NetEggsNote>
   <SF_DifficultyYieldNote>Your difficulty's butcher yield x{0} is included.</SF_DifficultyYieldNote>
   <SF_CurveNote>The game's meat post-processing boosts small yields (minimum ~14 meat before body-size scaling tapers off at 40), so small life stages return more meat than a straight body-size proportion of the adult - exactly what butchering yields in game.</SF_CurveNote>
   <SF_EfficiencyComparisonLine>{0}: {1}</SF_EfficiencyComparisonLine>
@@ -99,7 +99,6 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
   <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the best feed this animal's diet and stomach allow. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>
 
   <SF_MeatUnits>{0} meat</SF_MeatUnits>
-  <SF_MeatUnitsPerDay>{0} meat per day</SF_MeatUnitsPerDay>
   <SF_NutritionWord>nutrition</SF_NutritionWord>
   <SF_StomachLabel>max stomach (baby/juvenile/adult)</SF_StomachLabel>
   <SF_StomachTip>Maximum nutrition the stomach holds at each life stage, listed baby to adult (in vanilla 1 x body size; adult {0}).\n\nAn animal only seeks food when its stomach is below {1} full - the usable space per feeding is what is left: {2} of the stomach, {3} nutrition for an adult. A food item bigger than that space wastes the overflow, which is why simple meals only pay off for large animals - the per-feed breakdowns in the efficiency tooltips show it for every stage and feed.\n\nAssuming it eats to full each time (from {4} to 100%), the feeding attempts are:</SF_StomachTip>
