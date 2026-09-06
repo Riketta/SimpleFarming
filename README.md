@@ -26,6 +26,7 @@ animals all work without any per-species hardcoding.
 | ---- | ------- |
 | adult meat nutrition | Meat units x the meat def's nutrition, at your current difficulty's butcher yield. |
 | food to grow one adult | All-in food per offspring grown to adult - mother's gestation + conception wait + growth food + fathers' share - as raw nutrition of the assumed feed. |
+| max stomach (baby/juvenile/adult) | Stomach capacity per life stage in nutrition. Sets how much the animal can eat per feeding: a food item bigger than the free stomach space wastes the overflow, which is what makes simple meals bad feed for small animals. |
 | slaughter efficiency (per life stage) | Meat at that stage divided by the same all-in food. Above 100% the animal returns more nutrition than the operation spends on it. The headline number of the mod; the assumed feed is named in the value. |
 | best slaughter age | Stage with the highest efficiency. |
 | slaughter pregnant females? | Whether the newborn litter outvalues the feed a half-done pregnancy still costs. |

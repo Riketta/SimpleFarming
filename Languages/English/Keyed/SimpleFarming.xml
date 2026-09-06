@@ -101,6 +101,8 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
   <SF_MeatUnits>{0} meat</SF_MeatUnits>
   <SF_MeatUnitsPerDay>{0} meat per day</SF_MeatUnitsPerDay>
   <SF_NutritionWord>nutrition</SF_NutritionWord>
+  <SF_StomachLabel>max stomach (baby/juvenile/adult)</SF_StomachLabel>
+  <SF_StomachTip>Maximum nutrition the stomach holds at each life stage, listed baby to adult (in vanilla 1 x body size; adult {0}).\n\nAn animal only seeks food when its stomach is below {1} full - the usable space per feeding is what is left: {2} of the stomach, {3} nutrition for an adult. A food item bigger than that space wastes the overflow, which is why simple meals only pay off for large animals - the per-feed breakdowns in the efficiency tooltips show it for every stage and feed.</SF_StomachTip>
   <SF_FeedBreakdownHeader>Efficiency by feed (current: {0}):</SF_FeedBreakdownHeader>
   <SF_FeedBreakdownBaseline>    {0}: {1} (baseline)</SF_FeedBreakdownBaseline>
   <SF_FeedBreakdownLine>    {0}: {1}</SF_FeedBreakdownLine>

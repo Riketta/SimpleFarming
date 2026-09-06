@@ -136,6 +136,11 @@ namespace SimpleFarming
         /// be worse than raw pieces for small animals.</summary>
         public float feedingSpace;
 
+        /// <summary>[i] = max nutrition the stomach holds in stage i: abstract adult
+        /// MaxNutrition x the stage's bodySizeFactor - matches a pawn's MaxNutrition = 1 x
+        /// BodySize (foodMaxFactor is 1 in vanilla).</summary>
+        public float[] stageMaxNutrition;
+
         /// <summary>Best usable feed's effective multiplier over raw nutrition: 1.00 for raw
         /// pieces, 1.25 kibble / 1.60 pemmican / 1.80 simple meals when the diet allows and
         /// the stomach fits the pieces. All displayed food costs are raw nutrition at this
@@ -352,6 +357,11 @@ namespace SimpleFarming
             m.maxNutritionAdult = def.GetStatValueAbstract(StatDefOf.MaxNutrition);
             m.wantEatLevel = race.FoodLevelPercentageWantEat;
             m.feedingSpace = m.maxNutritionAdult * (1f - m.wantEatLevel);
+            m.stageMaxNutrition = new float[m.stages.Count];
+            for (int i = 0; i < m.stageMaxNutrition.Length; i++)
+            {
+                m.stageMaxNutrition[i] = m.maxNutritionAdult * m.stages[i].def.bodySizeFactor;
+            }
 
             // ---- feed options ----
             // Compute every feed the diet allows, settings or not: raw pieces (x1.00
@@ -604,6 +614,18 @@ namespace SimpleFarming
                     {
                         sb.Append("(off)");
                     }
+                }
+            }
+            if (stageMaxNutrition != null)
+            {
+                sb.Append(" stomach=");
+                for (int i = 0; i < stageMaxNutrition.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        sb.Append("/");
+                    }
+                    sb.Append(stageMaxNutrition[i].ToString("0.##"));
                 }
             }
             sb.Append(" adultFood=").Append(adultFoodPerDay.ToString("0.##")).Append("/d");

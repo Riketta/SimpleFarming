@@ -356,6 +356,23 @@ namespace SimpleFarming
                     m.maleFoodPerOffspring.ToString("0.##"),
                     adultTotal.ToString("0.##")) + YieldNote(m) + FeedNote(m), 9810));
 
+            // -- max stomach per life stage: what "a meal too big" means for this animal --
+            StringBuilder stomach = new StringBuilder();
+            for (int i = 0; i < m.StageCount; i++)
+            {
+                if (i > 0)
+                {
+                    stomach.Append("/");
+                }
+                stomach.Append(m.stageMaxNutrition[i].ToString("0.##"));
+            }
+            entries.Add(new StatDrawEntry(cat, "SF_StomachLabel".Translate(),
+                stomach + " " + "SF_NutritionWord".Translate(),
+                "SF_StomachTip".Translate(m.maxNutritionAdult.ToString("0.##"),
+                    m.wantEatLevel.ToStringPercent(),
+                    (1f - m.wantEatLevel).ToStringPercent(),
+                    m.feedingSpace.ToString("0.##")), 9805));
+
             // -- one all-in efficiency row per life stage --
             StringBuilder comparison = new StringBuilder();
             for (int i = 0; i < m.StageCount; i++)
