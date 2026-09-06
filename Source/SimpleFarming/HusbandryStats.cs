@@ -304,13 +304,13 @@ namespace SimpleFarming
         }
 
         /// <summary>Formats a meat-nutrition value with the raw meat it converts to, e.g.
-        /// "1.75 (35 meat)" - nutrition for the math, meat pieces for the butcher's bill.
-        /// Meat units are the MeatAmount side of the same value (nutrition per unit read
-        /// from the meat def), so the pair always reconciles.</summary>
+        /// "1.75 nutrition (35 meat)" - nutrition for the math, meat pieces for the
+        /// butcher's bill. Meat units are the MeatAmount side of the same value (nutrition
+        /// per unit read from the meat def), so the pair always reconciles.</summary>
         private static string MeatValue(float meatNutrition, float meatAmount)
         {
-            return meatNutrition.ToString("0.##") + " ("
-                + "SF_MeatUnits".Translate(meatAmount.ToString("0.#")) + ")";
+            return meatNutrition.ToString("0.##") + " " + "SF_NutritionWord".Translate()
+                + " (" + "SF_MeatUnits".Translate(meatAmount.ToString("0.#")) + ")";
         }
 
         /// <summary>" (12 meat)"-style parenthetical for tooltip lines whose nutrition value
@@ -450,7 +450,8 @@ namespace SimpleFarming
                         (eggsPerDay * eggNutrition).ToString("0.##"));
                 }
                 entries.Add(new StatDrawEntry(cat, "SF_NetPerDayLabel".Translate(),
-                    net.ToString("+0.00;-0.00") + " " + "SF_NutritionWord".Translate(),
+                    net.ToString("+0.00;-0.00") + " " + "SF_NutritionWord".Translate()
+                        + MeatUnitsFragment(m, meatPerDay, "SF_MeatUnitsPerDay", "0.##"),
                     "SF_NetPerDayTip".Translate(StageLabel(m, best), m.feedLabel,
                         meatPerDay.ToString("0.00"),
                         offspringFoodPerDay.ToString("0.00"),
