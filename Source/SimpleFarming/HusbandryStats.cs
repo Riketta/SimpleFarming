@@ -208,8 +208,9 @@ namespace SimpleFarming
             if (m.hasMeat)
             {
                 float meatPerDay = m.offspringPerFemalePerDay * m.adultMeatNutrition;
+                float meatUnitsPerDay = m.offspringPerFemalePerDay * m.adultMeatAmount;
                 entries.Add(new StatDrawEntry(cat, "SF_MeatPerDayLabel".Translate(),
-                    meatPerDay.ToString("0.##"),
+                    MeatValue(meatPerDay, meatUnitsPerDay),
                     "SF_MeatPerDayTip".Translate(meatPerDay.ToString("0.##"),
                         m.offspringPerFemalePerDay.ToString("0.###"),
                         m.adultMeatNutrition.ToString("0.##")) + YieldNote(m), 9840));
@@ -302,6 +303,16 @@ namespace SimpleFarming
             return sb.ToString();
         }
 
+        /// <summary>Formats a meat-nutrition value with the raw meat it converts to, e.g.
+        /// "1.75 (35 meat)" - nutrition for the math, meat pieces for the butcher's bill.
+        /// Meat units are the MeatAmount side of the same value (nutrition per unit read
+        /// from the meat def), so the pair always reconciles.</summary>
+        private static string MeatValue(float meatNutrition, float meatAmount)
+        {
+            return meatNutrition.ToString("0.##") + " ("
+                + "SF_MeatUnits".Translate(meatAmount.ToString("0.#")) + ")";
+        }
+
         private static void AddSlaughterEntries(HusbandryModel m, StatCategoryDef cat, List<StatDrawEntry> entries)
         {
             int last = m.StageCount - 1;
@@ -309,7 +320,7 @@ namespace SimpleFarming
             // -- adult meat nutrition --
             string yieldNote = YieldNote(m);
             entries.Add(new StatDrawEntry(cat, "SF_AdultMeatNutritionLabel".Translate(),
-                m.adultMeatNutrition.ToString("0.##"),
+                MeatValue(m.adultMeatNutrition, m.adultMeatAmount),
                 "SF_AdultMeatNutritionTip".Translate(m.adultMeatAmount.ToString("0.#"),
                     m.meatNutritionPerUnit.ToString("0.###"), m.adultMeatNutrition.ToString("0.##"),
                     m.leatherAmount.ToString("0")) + yieldNote, 9820));
@@ -333,6 +344,10 @@ namespace SimpleFarming
                     continue;
                 }
                 string stageLabel = StageLabel(m, i);
+                string meatUnits = m.meatNutritionPerUnit > 1e-6f
+                    ? "SF_MeatUnits".Translate((m.stageMeatNutrition[i] / m.meatNutritionPerUnit)
+                        .ToString("0.#"))
+                    : "";
                 string tip = "SF_EfficiencyTip".Translate(stageLabel,
                     m.feedLabel,
                     m.feedMultiplier.ToStringPercent(),
@@ -343,7 +358,8 @@ namespace SimpleFarming
                     m.growthFoodToStage[i].ToString("0.##"),
                     m.maleFoodPerOffspring.ToString("0.##"),
                     m.allInEfficiencyToStage[i].ToStringPercent(),
-                    m.efficiencyToStage[i].ToStringPercent());
+                    m.efficiencyToStage[i].ToStringPercent(),
+                    meatUnits);
                 if (m.meatCurveActive)
                 {
                     tip += "\n\n" + "SF_CurveNote".Translate();
