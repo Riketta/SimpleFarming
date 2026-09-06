@@ -270,7 +270,11 @@ namespace SimpleFarming
             {
                 return "";
             }
-            float baseEfficiency = m.allInEfficiencyToStage[stage];
+            // The model's food numbers are stored in raw-nutrition units OF THE APPLIED
+            // FEED (Build divides them by feedMultiplier), so allInEfficiencyToStage already
+            // includes the applied multiplier. Recover the raw-feeding basis before scaling
+            // to each feed's own multiplier, or every line double-counts.
+            float rawEfficiency = m.allInEfficiencyToStage[stage] / m.feedMultiplier;
             StringBuilder sb = new StringBuilder();
             sb.Append("\n\n").Append("SF_FeedBreakdownHeader".Translate(m.feedLabel));
             for (int i = 0; i < m.feedOptions.Count; i++)
@@ -281,7 +285,7 @@ namespace SimpleFarming
                     sb.Append("\n").Append("SF_FeedBreakdownRefused".Translate(o.label));
                     continue;
                 }
-                string value = (baseEfficiency * o.multiplier).ToStringPercent();
+                string value = (rawEfficiency * o.multiplier).ToStringPercent();
                 if (i == 0)
                 {
                     sb.Append("\n").Append("SF_FeedBreakdownBaseline".Translate(o.label, value));
