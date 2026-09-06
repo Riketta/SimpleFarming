@@ -313,6 +313,19 @@ namespace SimpleFarming
                 + "SF_MeatUnits".Translate(meatAmount.ToString("0.#")) + ")";
         }
 
+        /// <summary>" (12 meat)"-style parenthetical for tooltip lines whose nutrition value
+        /// is pure meat income, via the given units string ("SF_MeatUnits" /
+        /// "SF_MeatUnitsPerDay"). Empty for degenerate meat with no nutrition per unit -
+        /// tooltips must never render empty parentheses.</summary>
+        private static string MeatUnitsFragment(HusbandryModel m, float meatNutrition,
+            string unitsKey, string format)
+        {
+            return m.meatNutritionPerUnit > 1e-6f
+                ? " (" + unitsKey.Translate((meatNutrition / m.meatNutritionPerUnit)
+                    .ToString(format)) + ")"
+                : "";
+        }
+
         private static void AddSlaughterEntries(HusbandryModel m, StatCategoryDef cat, List<StatDrawEntry> entries)
         {
             int last = m.StageCount - 1;
@@ -403,7 +416,9 @@ namespace SimpleFarming
                         meatPerDay.ToString("0.00"),
                         offspringFoodPerDay.ToString("0.00"),
                         m.herdFoodPerFemalePerDay.ToString("0.00"),
-                        net.ToString("+0.00;-0.00")) + eggsNote + yieldNote, 9695));
+                        net.ToString("+0.00;-0.00"),
+                        MeatUnitsFragment(m, meatPerDay, "SF_MeatUnitsPerDay", "0.##"))
+                        + eggsNote + yieldNote, 9695));
             }
 
             // -- pregnant females: slaughter or let birth? --
@@ -419,7 +434,8 @@ namespace SimpleFarming
                         m.adultFoodPerDay.ToString("0.##"),
                         m.remainingGestationFoodAvg.ToString("0.##"),
                         m.newbornLitterMeat.ToString("0.##"),
-                        advice), 9690));
+                        advice,
+                        MeatUnitsFragment(m, m.newbornLitterMeat, "SF_MeatUnits", "0.#")), 9690));
             }
         }
     }

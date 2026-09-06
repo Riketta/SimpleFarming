@@ -78,12 +78,12 @@ Efficiency: {3} / {4} = {9}. Above 100% the animal returns more food than the op
 Excluding the fathers' share, the same slaughter returns {10}.</SF_EfficiencyTip>
   <SF_EfficiencyStagesTip>For comparison:\n{0}</SF_EfficiencyStagesTip>
   <SF_RecommendedTip>{0}\n\nSlaughter age with the best all-in nutrition return per food spent (parents' and offspring's food, fathers included). Cheaper food (grazing) or extra products (milk, wool, leather, eggs) can shift the real answer.</SF_RecommendedTip>
-  <SF_PregnantAdviceTip>A randomly picked pregnant female is on average halfway through gestation: about {0} days x {1} nutrition/day = {2} nutrition left to spend on the pregnancy.\n\nThe newborn litter would return {3} nutrition (slaughtered immediately).\n\n{4}</SF_PregnantAdviceTip>
+  <SF_PregnantAdviceTip>A randomly picked pregnant female is on average halfway through gestation: about {0} days x {1} nutrition/day = {2} nutrition left to spend on the pregnancy.\n\nThe newborn litter would return {3} nutrition{5} if slaughtered right away.\n\n{4}</SF_PregnantAdviceTip>
   <SF_PregnantAdviceLet>Let her give birth - the litter outvalues the remaining pregnancy feed. Letting offspring grow past birth only pays if the grown-stage efficiency above exceeds 100%.</SF_PregnantAdviceLet>
   <SF_PregnantAdviceSlaughter>Slaughtering now is fine - the litter does not outvalue the remaining pregnancy feed.</SF_PregnantAdviceSlaughter>
   <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio, herd fed {1}), all raw nutrition eaten vs meat produced, per female per day:
 
-- meat income: +{2}
+- meat income: +{2}{6}
 - offspring growth food: -{3}
 - breeding stock food: -{4}
 
@@ -99,6 +99,7 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
   <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the best feed this animal's diet and stomach allow. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>
 
   <SF_MeatUnits>{0} meat</SF_MeatUnits>
+  <SF_MeatUnitsPerDay>{0} meat per day</SF_MeatUnitsPerDay>
   <SF_FeedBreakdownHeader>Efficiency by feed (current: {0}):</SF_FeedBreakdownHeader>
   <SF_FeedBreakdownBaseline>    {0}: {1} (baseline)</SF_FeedBreakdownBaseline>
   <SF_FeedBreakdownLine>    {0}: {1}</SF_FeedBreakdownLine>
