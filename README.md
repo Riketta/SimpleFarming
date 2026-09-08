@@ -30,7 +30,7 @@ animals all work without any per-species hardcoding.
 | slaughter efficiency (per life stage) | Meat at that stage divided by the same all-in food. Above 100% the animal returns more nutrition than the operation spends on it. The headline number of the mod; the assumed feed is named in the value. |
 | best slaughter age | Stage with the highest efficiency. |
 | slaughter pregnant females? | Whether the newborn litter outvalues the feed a half-done pregnancy still costs. |
-| net meat per female per day | All-in economics: meat income minus offspring food minus breeding stock (incl. males). Negative = the operation eats more than it returns. Egg/milk/wool/leather income not counted. |
+| net meat per female per day | All-in economics: meat income minus offspring food minus breeding stock (incl. males), evaluated at the stage with the largest meat-minus-food margin - not always the best-efficiency stage. Negative = the operation eats more than it returns. Egg/milk/wool/leather income not counted. |
 
 Every row has a tooltip with the full calculation and the raw def numbers behind it.
 
@@ -81,22 +81,27 @@ allow**, and applies that feed's multiplier to every food number:
 | raw pieces (hay / raw meat) | x1.00 | everyone - the baseline |
 | kibble (0.05 per piece; 2.0 raw -> 2.5) | x1.25 | everyone whose diet allows it - pieces never waste |
 | pemmican (0.05 per piece; 0.5 raw -> 0.8) | x1.60 | same - the usual best feed |
-| simple meal (0.9 per meal; 0.5 raw -> 0.9) | x1.80 | only animals whose usable stomach space is 0.9+ (cows and other large animals); smaller ones waste the overflow and end up worse than raw |
+| simple meal (0.9 per meal; 0.5 raw -> 0.9) | x1.80 | only animals whose usable adult stomach space is 0.9+ (cows and other large animals); smaller ones waste the overflow and end up worse than raw. Absorption is computed per life stage - young stages have smaller usable space, so meals are worse for them even on large animals |
 
 **Why meals don't scale down**: animals only seek food when their stomach is below a
 diet-dependent level (herbivores 45% full, carnivores/omnivores 30%, egg-eaters 40%) and
 then eat whole items - anything bigger than the free space is wasted. `MaxNutrition` = 1 x
 body size, so a chicken (stomach 0.3, usable 0.17) can only use 0.17 of a 0.9 meal, giving
-an effective x0.33 - worse than raw. The block picks pemmican for it instead.
+an effective x0.33 - worse than raw. Young stages are smaller still: a chick (stomach 0.18
+via its `foodMaxFactor` 6) only absorbs x0.20 of a meal. The block picks pemmican for the
+chicken instead.
 
 Examples of displayed adult-slaughter efficiency (100% butcher yield, default feed
 selection = raw + simple meals): chicken **107%** (raw - meals would be x0.33 for its
-stomach, so raw wins), ibex **142%** (simple meals), cow **170%** (simple meals). With
-pemmican enabled in the settings the same animals read 172% / 206% / 170%. Diets also
-refuse feeds outright and the tooltip says so (wargs refuse everything processed,
-herbivores refuse meat-only feeds). Grazing whole plants (0.5 nutrition) wastes similarly
-for small animals - a chicken absorbs 0.17 per plant (67% lost); the efficiency rows are
-absorbed-nutrition based, so that loss is not charged, and hay pieces or kibble avoid it.
+stomach, so raw wins), ibex **118%** (simple meals - x1.10 for the adult, but only x0.66
+in the baby stage, which drags the growth-food cost up), cow **165%** (simple meals -
+x1.80 for the adult, x1.58 for the baby). With pemmican enabled in the settings the same
+animals read 172% / 206% / 165% (pemmican pieces are small enough to never waste, at any
+age). Diets also refuse feeds outright and the tooltip says so (wargs refuse everything
+processed, herbivores refuse meat-only feeds). Grazing whole plants (0.5 nutrition) wastes
+similarly for small animals - a chicken absorbs 0.17 per plant (67% lost); the efficiency
+rows are absorbed-nutrition based, so that loss is not charged, and hay pieces or kibble
+avoid it.
 
 **Which feeds are considered is a mod setting** (mod settings -> Simple Farming). By default
 only **raw pieces and simple meals** are enabled - pemmican and kibble are opt-in, since
@@ -110,9 +115,10 @@ raw pieces instead simply scales the food numbers back up (and a marginal farm c
 
 Each slaughter-efficiency tooltip also breaks that stage's efficiency down **per feed** -
 raw baseline, kibble, pemmican, simple meals - no matter what the settings' feed selection
-says. Feeds switched off in the settings are marked "(off in settings)", feeds the animal's
-diet refuses are listed as refused, and wasteful feeds simply show their (lower) percentage.
-The settings only decide which feed the headline numbers assume.
+says, each priced with that feed's own multiplier for the stage in question. Feeds switched
+off in the settings are marked "(off in settings)", feeds the animal's diet refuses are
+listed as refused, and wasteful feeds simply show their (lower) percentage. The settings
+only decide which feed the headline numbers assume.
 
 ## Assumptions & limits
 
