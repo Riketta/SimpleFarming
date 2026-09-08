@@ -103,7 +103,7 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
 
 
 
-  <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the best feed this animal's diet and stomach allow. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>
+  <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the feed with the best slaughter economics for this animal. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>
 
   <SF_MeatUnits>{0} meat</SF_MeatUnits>
   <SF_NutritionWord>nutrition</SF_NutritionWord>

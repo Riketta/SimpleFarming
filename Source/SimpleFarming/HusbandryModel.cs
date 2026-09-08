@@ -148,10 +148,10 @@ namespace SimpleFarming
         /// next stage's). The last (adult) entry stays 0 - adult is open-ended.</summary>
         public float[] stageSpanDays;
 
-        /// <summary>Best usable feed's effective multiplier over raw nutrition: 1.00 for raw
-        /// pieces, 1.25 kibble / 1.60 pemmican / 1.80 simple meals when the diet allows and
-        /// the stomach fits the pieces. All displayed food costs are raw nutrition at this
-        /// multiplier.</summary>
+        /// <summary>Headline feed's effective multiplier over raw nutrition in the adult
+        /// stage: the usable, enabled feed with the best slaughter economics (per-stage
+        /// absorption included in the comparison). All displayed food costs are raw
+        /// nutrition at this multiplier.</summary>
         public float feedMultiplier = 1f;
 
         /// <summary>Label of the assumed herd feed ("raw feed", "kibble", "pemmican",
@@ -381,9 +381,11 @@ namespace SimpleFarming
 
             float delayDaysPerCycle = ComputeReproduction(m, race);
             ComputeFeedingSpace(m, def, race);
-            ComputeFeedOptions(m);
-            ComputeFood(m, race, delayDaysPerCycle);
+            // Meat before feed selection: the headline feed is chosen by scoring actual
+            // slaughter economics, which needs the per-stage meat margins.
             ComputeMeat(m, def, race);
+            ComputeFeedOptions(m, race, delayDaysPerCycle);
+            ComputeFood(m, race, delayDaysPerCycle);
             ComputeEfficiency(m);
             ComputePregnantAdvice(m);
             return m;
@@ -509,8 +511,12 @@ namespace SimpleFarming
         }
 
         /// <summary>Computes every feed the diet allows, settings or not, then picks the
-        /// headline feed: the best multiplier among usable feeds the player enabled.</summary>
-        private static void ComputeFeedOptions(HusbandryModel m)
+        /// headline feed: the usable, enabled feed with the best slaughter economics - the
+        /// highest best-stage meat-minus-food margin. Comparing adult multipliers alone is
+        /// wrong since per-stage absorption can make a feed whose adult multiplier beats
+        /// raw a net loss (ibex: meals x1.10 for the adult but x0.66/x0.83 while growing).</summary>
+        private static void ComputeFeedOptions(HusbandryModel m, RaceProperties race,
+            float delayDaysPerCycle)
         {
             // Raw pieces (x1.00 baseline), kibble (x1.25), pemmican (x1.60), simple meals
             // (up to x1.80 - items bigger than the usable stomach space waste the overflow).
@@ -526,18 +532,63 @@ namespace SimpleFarming
                 s != null && s.feedPemmican);
             AddFeedOption(m, "simple meals", ThingDefOf.MealSimple, "CookMealSimple",
                 s != null && s.feedMeals);
+            // All-in food per offspring on raw feed: mother's calendar (cycle + wait) plus
+            // the fathers' share, at eaten nutrition. The same fixed cost is priced with
+            // each candidate feed's adult multiplier during scoring.
+            float adultEaten = m.AdultStage.def.hungerRateFactor * race.baseHungerRate
+                * Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay;
+            float fixedRaw = (m.daysPerOffspring + delayDaysPerCycle / m.litterSizeAvg)
+                * adultEaten * (1f + m.malesPerFemale);
             FeedOption chosen = m.feedOptions[0];
+            float bestScore = ScoreFeed(m, race, fixedRaw, chosen);
             for (int i = 1; i < m.feedOptions.Count; i++)
             {
                 FeedOption o = m.feedOptions[i];
-                if (o.usable && o.enabled && o.multiplier > chosen.multiplier)
+                if (!o.usable || !o.enabled)
                 {
+                    continue;
+                }
+                float score = ScoreFeed(m, race, fixedRaw, o);
+                if (score > bestScore)
+                {
+                    bestScore = score;
                     chosen = o;
                 }
             }
             m.feedMultiplier = chosen.multiplier;
             m.feedLabel = chosen.label;
             m.stageFeedMultiplier = chosen.stageMultipliers;
+        }
+
+        /// <summary>Headline-feed score: the best meat-minus-all-in-food margin over life
+        /// stages with that feed. Net per day is throughput times exactly this margin and
+        /// throughput is feed-independent, so maximizing it picks the economically best
+        /// feed; strict comparison keeps the raw baseline ahead of ties.</summary>
+        private static float ScoreFeed(HusbandryModel m, RaceProperties race,
+            float fixedRaw, FeedOption o)
+        {
+            float best = float.NegativeInfinity;
+            for (int i = 0; i < m.StageCount; i++)
+            {
+                if (m.stageMeatNutrition[i] <= Epsilon)
+                {
+                    continue;
+                }
+                float allIn = fixedRaw / StageMultOf(o, int.MaxValue);
+                for (int j = 0; j < i; j++)
+                {
+                    float span = Mathf.Max(m.stages[j + 1].minAge - m.stages[j].minAge, 0f)
+                        * GenDate.DaysPerYear;
+                    float eaten = m.stages[j].def.hungerRateFactor * race.baseHungerRate
+                        * Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay;
+                    allIn += span * eaten / StageMultOf(o, j);
+                }
+                if (m.stageMeatNutrition[i] - allIn > best)
+                {
+                    best = m.stageMeatNutrition[i] - allIn;
+                }
+            }
+            return best;
         }
 
         /// <summary>Food rates per day, the mother's calendar food per offspring and the

@@ -73,8 +73,9 @@ All mechanics mirror the live game code (1.6 sources):
 ## Assumed feed: raw, kibble, pemmican or meals
 
 All food numbers are **raw nutrition** - what the farm actually has to grow, harvest or
-cook. The block assumes the herd is fed on the **best feed the animal's diet and stomach
-allow**, and applies that feed's multiplier to every food number:
+cook. The block assumes the herd is fed on the **enabled feed with the best slaughter
+economics for that animal** - comparing actual per-stage absorption, not just the adult
+multiplier - and applies that feed's multipliers to every food number:
 
 | Feed | Nominal | Effective for |
 | ---- | ------- | ------------- |
@@ -93,15 +94,15 @@ chicken instead.
 
 Examples of displayed adult-slaughter efficiency (100% butcher yield, default feed
 selection = raw + simple meals): chicken **107%** (raw - meals would be x0.33 for its
-stomach, so raw wins), ibex **118%** (simple meals - x1.10 for the adult, but only x0.66
-in the baby stage, which drags the growth-food cost up), cow **165%** (simple meals -
-x1.80 for the adult, x1.58 for the baby). With pemmican enabled in the settings the same
-animals read 172% / 206% / 165% (pemmican pieces are small enough to never waste, at any
-age). Diets also refuse feeds outright and the tooltip says so (wargs refuse everything
-processed, herbivores refuse meat-only feeds). Grazing whole plants (0.5 nutrition) wastes
-similarly for small animals - a chicken absorbs 0.17 per plant (67% lost); the efficiency
-rows are absorbed-nutrition based, so that loss is not charged, and hay pieces or kibble
-avoid it.
+stomach, so raw wins), ibex **129%** (raw - meals convert at only x1.10 for the adult
+and x0.66/x0.83 while growing, which makes them a net loss and the mod falls back to
+raw), cow **165%** (simple meals - x1.80 for the adult, x1.58 for the baby). With
+pemmican enabled in the settings the same animals read 172% / 206% / 165% (pemmican
+pieces are small enough to never waste, at any age). Diets also refuse feeds outright
+and the tooltip says so (wargs refuse everything processed, herbivores refuse meat-only
+feeds). Grazing whole plants (0.5 nutrition) wastes similarly for small animals - a
+chicken absorbs 0.17 per plant (67% lost); the efficiency rows are absorbed-nutrition
+based, so that loss is not charged, and hay pieces or kibble avoid it.
 
 **Which feeds are considered is a mod setting** (mod settings -> Simple Farming). By default
 only **raw pieces and simple meals** are enabled - pemmican and kibble are opt-in, since
