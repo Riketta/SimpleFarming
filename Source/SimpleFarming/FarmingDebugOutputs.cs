@@ -77,6 +77,7 @@ namespace SimpleFarming
                 new TableDataGetter<HusbandryModel>("net/d",
                     m => O(m, m.bestNetStage >= 0
                         ? m.NetAt(m.bestNetStage).ToString("+0.00;-0.00") : "")),
+                new TableDataGetter<HusbandryModel>("net@raw/d", m => O(m, NetRaw(m))),
                 new TableDataGetter<HusbandryModel>("leather/d", m => O(m,
                     m.leatherDef != null && m.leatherAmount > 1e-6f
                         ? (m.offspringPerFemalePerDay * m.leatherAmount).ToString("0.##")
@@ -139,6 +140,33 @@ namespace SimpleFarming
                 sb.Append(values[i].ToStringPercent());
             }
             return sb.ToString();
+        }
+
+        /// <summary>Best net over stages if the herd ran on raw feed - independent of the
+        /// settings' feed selection, so species stay comparable on one basis. Reuses the
+        /// model's raw feed option (multiplier 1 at every stage), same math as net/d.</summary>
+        private static string NetRaw(HusbandryModel m)
+        {
+            if (m.feedOptions == null || m.feedOptions.Count == 0
+                || m.stageMeatNutrition == null)
+            {
+                return "";
+            }
+            HusbandryModel.FeedOption raw = m.feedOptions[0];
+            float best = float.NegativeInfinity;
+            for (int i = 0; i < m.StageCount; i++)
+            {
+                if (m.stageMeatNutrition[i] <= 1e-6f)
+                {
+                    continue;
+                }
+                float net = m.NetWithFeed(i, raw);
+                if (net > best)
+                {
+                    best = net;
+                }
+            }
+            return best > float.NegativeInfinity ? best.ToString("+0.00;-0.00") : "";
         }
     }
 }

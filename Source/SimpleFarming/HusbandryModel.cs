@@ -282,9 +282,18 @@ namespace SimpleFarming
         /// efficiency ratio (<see cref="bestNetStage"/> vs <see cref="bestStage"/>).</summary>
         public float NetAt(int stageIndex)
         {
-            return offspringPerFemalePerDay
-                * (stageMeatNutrition[stageIndex] - growthFoodToStage[stageIndex])
-                - herdFoodPerFemalePerDay;
+            return NetWithFeed(stageIndex, null);
+        }
+
+        /// <summary>The same net evaluated on an arbitrary feed: throughput x (stage meat -
+        /// the stage's all-in food priced with <paramref name="o"/>'s adult and per-stage
+        /// multipliers). <see cref="NetAt"/> delegates here with null (chosen feed); passing
+        /// the raw baseline option gives the feed-independent comparison basis the
+        /// "net @ raw" debug column shows.</summary>
+        public float NetWithFeed(int stageIndex, FeedOption o)
+        {
+            float allIn = AllInFoodWithFeed(stageIndex, o);
+            return offspringPerFemalePerDay * (stageMeatNutrition[stageIndex] - allIn);
         }
 
         /// <summary>The chosen feed's effective multiplier in stage i - per-stage when the
