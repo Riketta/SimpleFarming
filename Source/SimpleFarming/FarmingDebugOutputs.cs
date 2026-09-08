@@ -71,7 +71,11 @@ namespace SimpleFarming
                     m => O(m, SlashPct(m.efficiencyToStage))),
                 new TableDataGetter<HusbandryModel>("best",
                     m => O(m, m.bestStage >= 0 ? m.stages[m.bestStage].def.defName : "")),
-                new TableDataGetter<HusbandryModel>("net/d", m => O(m, Net(m).ToString("+0.00;-0.00"))),
+                new TableDataGetter<HusbandryModel>("net stage",
+                    m => O(m, m.bestNetStage >= 0 ? m.stages[m.bestNetStage].def.defName : "")),
+                new TableDataGetter<HusbandryModel>("net/d",
+                    m => O(m, m.bestNetStage >= 0
+                        ? m.NetAt(m.bestNetStage).ToString("+0.00;-0.00") : "")),
                 new TableDataGetter<HusbandryModel>("leather/d", m => O(m,
                     m.leatherDef != null && m.leatherAmount > 1e-6f
                         ? (m.offspringPerFemalePerDay * m.leatherAmount).ToString("0.##")
@@ -134,19 +138,6 @@ namespace SimpleFarming
                 sb.Append(values[i].ToStringPercent());
             }
             return sb.ToString();
-        }
-
-        /// <summary>Same arithmetic as the info card's net row, per female per day.</summary>
-        private static float Net(HusbandryModel m)
-        {
-            int best = m.bestStage;
-            if (best < 0)
-            {
-                return 0f;
-            }
-            return m.offspringPerFemalePerDay * m.stageMeatNutrition[best]
-                - m.offspringPerFemalePerDay * m.growthFoodToStage[best]
-                - m.herdFoodPerFemalePerDay;
         }
     }
 }

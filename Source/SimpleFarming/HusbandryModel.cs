@@ -84,12 +84,13 @@ namespace SimpleFarming
         /// for multi-egg clutches like tortoise (1~3) or cobra (1~2).</summary>
         public float clutchesPerMating;
 
-        /// <summary>Average days a fertile female waits to conceive (or a stalled hen to be
+        /// <summary>Average days a fertile female waits to conceive (or a hen to be
         /// fertilized) when males are available: 1 / (attempts x success).</summary>
         public float conceptionDelayDays;
 
-        /// <summary>Cycle days including the conception/fertilization wait. For egg layers that
-        /// can lay unfertilized eggs the wait costs nothing, so it is not added.</summary>
+        /// <summary>Cycle days including the conception/fertilization wait. Charged to every
+        /// species: unfertilized-capable layers keep laying, but each fertilized clutch costs
+        /// one mating and only fertilized clutches yield offspring.</summary>
         public float cycleDaysWithDelay;
 
         /// <summary>Optimal males per female: 1 / (conceptions a male delivers per day x days of
@@ -97,7 +98,8 @@ namespace SimpleFarming
         public float malesPerFemale;
         public float femalesPerMale;
 
-        /// <summary>Offspring (births / hatchlings) per female per day, ample males, delay included.</summary>
+        /// <summary>Offspring (births / hatchlings) per female per day at the optimal ratio;
+        /// the cycle includes the time to a successful mating with a free male.</summary>
         public float offspringPerFemalePerDay;
 
         // ---- food ----
@@ -163,15 +165,26 @@ namespace SimpleFarming
         /// are kept as unusable options so the efficiency tooltip can disclose that.</summary>
         public List<FeedOption> feedOptions;
 
+        /// <summary>The chosen feed's effective multiplier per life stage
+        /// (<see cref="FeedOption.stageMultipliers"/>); null for the raw baseline, whose
+        /// multiplier is uniformly 1. Young stages have their own stomach size, so a bulky
+        /// feed can absorb very differently in a chick than in the adult.</summary>
+        public float[] stageFeedMultiplier;
+
         /// <summary>One feed type the herd could be raised on.</summary>
         public class FeedOption
         {
             public string label;
 
-            /// <summary>Effective nutrition multiplier over raw feeding: 1.00 raw, 1.25
-            /// kibble, 1.60 pemmican, up to 1.80 simple meals (less when the pieces are
-            /// bigger than the usable stomach space and overflow is wasted).</summary>
+            /// <summary>Effective nutrition multiplier over raw feeding in the adult stage:
+            /// 1.00 raw, 1.25 kibble, 1.60 pemmican, up to 1.80 simple meals (less when the
+            /// pieces are bigger than the usable stomach space and overflow is wasted).</summary>
             public float multiplier = 1f;
+
+            /// <summary>[stage] = the same multiplier in that life stage, from the stage's
+            /// own stomach size (babies run foodMaxFactor 6). Null for the raw baseline,
+            /// whose multiplier is uniformly 1.</summary>
+            public float[] stageMultipliers;
 
             /// <summary>False when the diet refuses the feed or its recipe/def is missing.</summary>
             public bool usable = true;
@@ -181,10 +194,13 @@ namespace SimpleFarming
             public bool enabled = true;
         }
 
-        /// <summary>[i] = nutrition eaten from birth until reaching stage i ([0] = 0).</summary>
+        /// <summary>[i] = raw-feed nutrition eaten from birth until reaching stage i ([0] = 0):
+        /// each stage charged at the chosen feed's multiplier for that stage.</summary>
         public float[] growthFoodToStage;
 
-        /// <summary>[i] = nutrition per day eaten while in stage i.</summary>
+        /// <summary>[i] = nutrition per day eaten while in stage i, feed-independent eaten
+        /// basis (the need drains item nutrition whatever feed carries it). Convert to raw
+        /// feed nutrition with <see cref="StageFeedMultiplier"/>.</summary>
         public float[] stageFoodPerDay;
 
         // ---- meat ----
@@ -228,6 +244,12 @@ namespace SimpleFarming
 
         public int bestStage = -1;
 
+        /// <summary>Stage with the highest net meat per day - the best meat-minus-growth-food
+        /// margin, not always the best efficiency ratio (the meat curve can inflate a small
+        /// stage's ratio while its absolute margin stays tiny). The net row is evaluated
+        /// here; see <see cref="NetAt"/>.</summary>
+        public int bestNetStage = -1;
+
         public float newbornLitterMeat;
 
         /// <summary>Average food still to spend when a random pregnant female is inspected
@@ -253,10 +275,68 @@ namespace SimpleFarming
             return TotalFoodToStage(stageIndex) + maleFoodPerOffspring;
         }
 
+        /// <summary>Net meat nutrition per female per day when offspring are slaughtered at
+        /// stage i: throughput x (stage meat - stage growth food) - breeding stock upkeep.
+        /// The fixed per-day costs (mother calendar, fathers) are stage-independent, so the
+        /// net-best stage maximizes the meat-minus-growth margin - not always the best
+        /// efficiency ratio (<see cref="bestNetStage"/> vs <see cref="bestStage"/>).</summary>
+        public float NetAt(int stageIndex)
+        {
+            return offspringPerFemalePerDay
+                * (stageMeatNutrition[stageIndex] - growthFoodToStage[stageIndex])
+                - herdFoodPerFemalePerDay;
+        }
+
+        /// <summary>The chosen feed's effective multiplier in stage i - per-stage when the
+        /// feed defines one (processed feeds), else the uniform adult multiplier.</summary>
+        public float StageFeedMultiplier(int i)
+        {
+            if (stageFeedMultiplier != null && i >= 0 && i < stageFeedMultiplier.Length)
+            {
+                return stageFeedMultiplier[i];
+            }
+            return feedMultiplier;
+        }
+
+        /// <summary>Raw nutrition the farm spends per offspring raised to stage i if the herd
+        /// ran on feed <paramref name="o"/>: parent-side food (an adult's stomach) at the
+        /// feed's adult multiplier, each growth stage at its own stage multiplier. Passing
+        /// the chosen feed reproduces <see cref="AllInFoodToStage"/> exactly; the efficiency
+        /// breakdown uses this to price every feed per stage.</summary>
+        public float AllInFoodWithFeed(int stageIndex, FeedOption o)
+        {
+            if (o == null)
+            {
+                return AllInFoodToStage(stageIndex);
+            }
+            // Parent food is stored in raw nutrition OF THE CHOSEN FEED - undo its adult
+            // multiplier to get eaten nutrition, then apply this feed's.
+            float parentEaten = (gestationFoodPerOffspring + conceptionFoodPerOffspring
+                + maleFoodPerOffspring) * feedMultiplier;
+            float adultMult = StageMultOf(o, int.MaxValue);
+            float food = parentEaten / Mathf.Max(adultMult, Epsilon);
+            if (stageSpanDays != null)
+            {
+                for (int j = 0; j < stageIndex; j++)
+                {
+                    food += stageSpanDays[j] * stageFoodPerDay[j]
+                        / Mathf.Max(StageMultOf(o, j), Epsilon);
+                }
+            }
+            return food;
+        }
+
+        private static float StageMultOf(FeedOption o, int stage)
+        {
+            return o.stageMultipliers != null && stage < o.stageMultipliers.Length
+                ? o.stageMultipliers[stage]
+                : o.multiplier;
+        }
+
         /// <summary>Feeding attempts per day while in stage i, assuming each attempt fills
-        /// the stomach from the seek threshold to full: the stage's nutrition rate divided
-        /// by its usable space. Feed-independent - the need drains item nutrition no matter
-        /// what feed carries it.</summary>
+        /// the stomach from the seek threshold to full: the stage's eaten-nutrition rate
+        /// divided by its usable space. Feed-independent - the need drains item nutrition
+        /// no matter what feed carries it.</summary>
         public float MealsPerDayInStage(int i)
         {
             // Null/length guard for skipped or failed placeholders (their arrays were never
@@ -266,7 +346,7 @@ namespace SimpleFarming
                 return 0f;
             }
             float usable = stageMaxNutrition[i] * (1f - wantEatLevel);
-            return usable > Epsilon ? stageFoodPerDay[i] * feedMultiplier / usable : 0f;
+            return usable > Epsilon ? stageFoodPerDay[i] / usable : 0f;
         }
 
         // ==================== construction ====================
@@ -388,15 +468,14 @@ namespace SimpleFarming
             m.conceptionDelayDays = 1f / conceptionsPerMalePerDay;
 
             // ---- throughput ----
-            // Egg layers that can lay unfertilized eggs lose no laying time waiting for males.
-            // One mating covers cyclesPerMating cycles, so the wait amortizes: mammals wait
-            // once per gestation, stall layers once per clutchesPerMating clutches
-            // (batches > 1 egg exist only in mods - vanilla defs are all 1).
-            bool cycleHasDelay = !m.isEggLayer || m.malesNeededForEggs;
+            // Every offspring comes from a conception, so every species pays the wait. One
+            // mating covers cyclesPerMating cycles, so the wait amortizes: mammals wait once
+            // per gestation, layers once per clutchesPerMating clutches (batches > 1 egg
+            // exist only in mods - vanilla defs are all 1). Auto-laying hens lose no
+            // egg-laying time, but hatchling throughput counts fertilized clutches only and
+            // each of those costs one mating - same convention as mammals.
             float cyclesPerMating = daysCoveredPerMating / m.cycleDays;
-            float delayDaysPerCycle = cycleHasDelay
-                ? m.conceptionDelayDays / Mathf.Max(cyclesPerMating, Epsilon)
-                : 0f;
+            float delayDaysPerCycle = m.conceptionDelayDays / Mathf.Max(cyclesPerMating, Epsilon);
             m.cycleDaysWithDelay = m.cycleDays + delayDaysPerCycle;
             m.offspringPerFemalePerDay = m.litterSizeAvg / Mathf.Max(m.cycleDaysWithDelay, Epsilon);
             return delayDaysPerCycle;
@@ -449,18 +528,22 @@ namespace SimpleFarming
             }
             m.feedMultiplier = chosen.multiplier;
             m.feedLabel = chosen.label;
+            m.stageFeedMultiplier = chosen.stageMultipliers;
         }
 
-        /// <summary>Food rates per day (already in raw nutrition of the assumed feed), the
-        /// mother's calendar food per offspring and the fathers' share at the optimal ratio,
-        /// plus per-stage rates, stage lengths and cumulative growth food.</summary>
+        /// <summary>Food rates per day, the mother's calendar food per offspring and the
+        /// fathers' share at the optimal ratio, plus per-stage rates, stage lengths and
+        /// cumulative growth food. All displayed costs are raw nutrition of the chosen
+        /// feed: eaten nutrition divided by the feed's effective multiplier - the adult
+        /// multiplier for the breeding stock, each stage's own multiplier for its growth
+        /// food (a bulky feed wastes more in a small stage's stomach).</summary>
         private static void ComputeFood(HusbandryModel m, RaceProperties race,
             float delayDaysPerCycle)
         {
-            float nutritionPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay
-                / m.feedMultiplier;
+            float eatenPerDayPerHungerRate = Need_Food.BaseFoodFallPerTick * GenDate.TicksPerDay;
             float adultFactor = m.AdultStage.def.hungerRateFactor;
-            m.adultFoodPerDay = adultFactor * race.baseHungerRate * nutritionPerDayPerHungerRate;
+            m.adultFoodPerDay = adultFactor * race.baseHungerRate
+                * eatenPerDayPerHungerRate / m.feedMultiplier;
             m.herdFoodPerFemalePerDay = m.adultFoodPerDay * (1f + m.malesPerFemale);
             m.gestationFoodPerOffspring = m.daysPerOffspring * m.adultFoodPerDay;
             m.conceptionFoodPerOffspring = delayDaysPerCycle / m.litterSizeAvg * m.adultFoodPerDay;
@@ -473,8 +556,9 @@ namespace SimpleFarming
             m.stageSpanDays = new float[stageCount];
             for (int i = 0; i < stageCount; i++)
             {
+                // Eaten nutrition per day in stage i, before feed conversion.
                 m.stageFoodPerDay[i] = m.stages[i].def.hungerRateFactor * race.baseHungerRate
-                    * nutritionPerDayPerHungerRate;
+                    * eatenPerDayPerHungerRate;
             }
             for (int i = 1; i < stageCount; i++)
             {
@@ -484,7 +568,7 @@ namespace SimpleFarming
                 // unlike the vanilla debug helper, which charges the next stage's rate.
                 m.stageSpanDays[i - 1] = spanDays;
                 m.growthFoodToStage[i] = m.growthFoodToStage[i - 1]
-                    + spanDays * m.stageFoodPerDay[i - 1];
+                    + spanDays * m.stageFoodPerDay[i - 1] / m.StageFeedMultiplier(i - 1);
             }
         }
 
@@ -542,6 +626,7 @@ namespace SimpleFarming
                 return;
             }
             float best = float.NegativeInfinity;
+            float bestMargin = float.NegativeInfinity;
             for (int i = 0; i < stageCount; i++)
             {
                 if (m.stageMeatNutrition[i] <= Epsilon)
@@ -560,6 +645,15 @@ namespace SimpleFarming
                 {
                     best = m.allInEfficiencyToStage[i];
                     m.bestStage = i;
+                }
+                // The net row's stage: net per day = throughput x (meat - growth food) -
+                // fixed herd upkeep. The fixed parts are stage-independent, so this is a
+                // margin argmax, which can differ from the ratio argmax above.
+                float margin = m.stageMeatNutrition[i] - m.growthFoodToStage[i];
+                if (margin >= bestMargin)
+                {
+                    bestMargin = margin;
+                    m.bestNetStage = i;
                 }
             }
         }
@@ -616,13 +710,52 @@ namespace SimpleFarming
                 option.usable = false;
                 return;
             }
+            if (!(recipe.IngredientValueGetter is IngredientValueGetter_Nutrition))
+            {
+                // The conversion below treats ingredient counts as nutrition - only valid
+                // for nutrition-getter recipes (all vanilla cooking ones). A volume-based
+                // modded recipe would silently produce a wrong multiplier: refuse it and
+                // let the tooltip disclose the refusal.
+                option.usable = false;
+                FarmingLog.Debug(m.def.defName + ": feed '" + label + "' recipe '" + recipeName
+                    + "' does not count ingredients by nutrition - marked unusable");
+                return;
+            }
             float rawNutrition = 0f;
             for (int i = 0; i < recipe.ingredients.Count; i++)
             {
                 rawNutrition += recipe.ingredients[i].GetBaseCount();
             }
             float nominal = itemNutrition / Mathf.Max(rawNutrition / recipe.products[0].count, Epsilon);
-            option.multiplier = nominal * Mathf.Min(1f, m.feedingSpace / itemNutrition);
+            // Per-stage absorption: pieces bigger than a stage's usable space waste the
+            // overflow, and young stages have their own (foodMaxFactor-sized) stomachs -
+            // the same 0.9 meal converts x1.8 for a cow adult but can be worse than raw
+            // for a chick at any age. The adult entry doubles as the headline multiplier.
+            if (m.stageMaxNutrition != null && m.stageMaxNutrition.Length > 0)
+            {
+                option.stageMultipliers = new float[m.stageMaxNutrition.Length];
+                for (int i = 0; i < option.stageMultipliers.Length; i++)
+                {
+                    option.stageMultipliers[i] = AbsorptionMultiplier(m, nominal,
+                        itemNutrition, m.stageMaxNutrition[i] * (1f - m.wantEatLevel));
+                }
+                option.multiplier = option.stageMultipliers[option.stageMultipliers.Length - 1];
+            }
+            else
+            {
+                option.multiplier = AbsorptionMultiplier(m, nominal, itemNutrition,
+                    m.feedingSpace);
+            }
+        }
+
+        /// <summary>Nominal conversion times the fraction of each piece that fits into the
+        /// usable feeding space; zero space converts nothing.</summary>
+        private static float AbsorptionMultiplier(HusbandryModel m, float nominal,
+            float itemNutrition, float usableSpace)
+        {
+            return usableSpace > Epsilon
+                ? nominal * Mathf.Min(1f, usableSpace / itemNutrition)
+                : 0f;
         }
 
         /// <summary>Inverts a monotonic piecewise-linear SimpleCurve. Returns NaN when the
@@ -723,6 +856,22 @@ namespace SimpleFarming
                     }
                 }
             }
+            if (stageFeedMultiplier != null)
+            {
+                bool uniform = true;
+                for (int i = 0; i < stageFeedMultiplier.Length; i++)
+                {
+                    if (!Mathf.Approximately(stageFeedMultiplier[i], feedMultiplier))
+                    {
+                        uniform = false;
+                        break;
+                    }
+                }
+                if (!uniform)
+                {
+                    sb.Append(" stageMult=").Append(JoinedSlash(stageFeedMultiplier, "0.##"));
+                }
+            }
             if (stageMaxNutrition != null)
             {
                 sb.Append(" stomach=").Append(JoinedSlash(stageMaxNutrition, "0.##"));
@@ -765,13 +914,15 @@ namespace SimpleFarming
                 {
                     sb.Append(" minYieldCurve");
                 }
-                if (bestStage >= 0)
+                if (bestNetStage >= 0)
                 {
                     sb.Append(" best=").Append(stages[bestStage].def.defName);
-                    float meatPerDay = offspringPerFemalePerDay * stageMeatNutrition[bestStage];
-                    float offspringFoodPerDay = offspringPerFemalePerDay * growthFoodToStage[bestStage];
-                    float net = meatPerDay - offspringFoodPerDay - herdFoodPerFemalePerDay;
-                    sb.Append(" net=").Append(net.ToString("+0.00;-0.00")).Append("/d");
+                    if (bestNetStage != bestStage)
+                    {
+                        sb.Append(" netBest=").Append(stages[bestNetStage].def.defName);
+                    }
+                    sb.Append(" net=").Append(NetAt(bestNetStage).ToString("+0.00;-0.00"))
+                        .Append("/d");
                 }
                 if (!isEggLayer)
                 {

@@ -44,7 +44,9 @@ All mechanics mirror the live game code (1.6 sources):
   Mating impregnates a mammal with a flat 50% chance; mating an egg layer fertilizes her next
   `eggFertilizationCountMax` eggs with certainty (`PawnUtility.Mated`).
 - **Conception wait** `T = 1 / (attemptsPerMalePerDay x pregnancyChance)` - included in the
-  cycle length, throughput and the mother's food cost.
+  cycle length, throughput and the mother's food cost. Auto-laying hens lose no egg-laying
+  time, but only fertilized clutches hatch, so the wait is charged to their offspring
+  numbers as well.
 - **Optimal ratio** `malesPerFemale = 1 / (attempts x chance x daysCoveredPerMating)`, where
   one mating sustains a full gestation for mammals or `eggFertilizationCountMax` eggs for
   layers. Examples: ibex 1 male per 3.8 females, cow 1 per 4.4.
@@ -88,9 +90,9 @@ body size, so a chicken (stomach 0.3, usable 0.17) can only use 0.17 of a 0.9 me
 an effective x0.33 - worse than raw. The block picks pemmican for it instead.
 
 Examples of displayed adult-slaughter efficiency (100% butcher yield, default feed
-selection = raw + simple meals): chicken **118%** (raw - meals would be x0.33 for its
-stomach, so raw wins), ibex **142%** (simple meals), cow **105%** (simple meals). With
-pemmican enabled in the settings the same animals read 188% / 206% / 105%. Diets also
+selection = raw + simple meals): chicken **107%** (raw - meals would be x0.33 for its
+stomach, so raw wins), ibex **142%** (simple meals), cow **170%** (simple meals). With
+pemmican enabled in the settings the same animals read 172% / 206% / 170%. Diets also
 refuse feeds outright and the tooltip says so (wargs refuse everything processed,
 herbivores refuse meat-only feeds). Grazing whole plants (0.5 nutrition) wastes similarly
 for small animals - a chicken absorbs 0.17 per plant (67% lost); the efficiency rows are

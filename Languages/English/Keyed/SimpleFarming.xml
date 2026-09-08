@@ -33,7 +33,7 @@
   <SF_MalesRequired>required - won't lay unfertilized</SF_MalesRequired>
   <SF_DaysValue>{0} days</SF_DaysValue>
   <SF_CycleMammalValue>{0} + {1} = {2} days</SF_CycleMammalValue>
-  <SF_CycleEggValue>clutch every {0} days</SF_CycleEggValue>
+  <SF_CycleEggValue>clutch every {0} days (incl. fertilization wait)</SF_CycleEggValue>
   <SF_LetBirthValue>no - let them give birth</SF_LetBirthValue>
   <SF_SlaughterPregnantValue>yes - litter not worth the feed</SF_SlaughterPregnantValue>
 
@@ -43,13 +43,13 @@
   <SF_RatioBreedingOnlyNote>This animal also lays edible unfertilized eggs without any males. The ratio above only matters when you want the eggs to hatch.</SF_RatioBreedingOnlyNote>
   <SF_MalesForEggsTip>Unfertilized egg progress stops partway ({0}%), so without a male this animal never lays at all. With the recommended male ratio the average fertilization wait is about {1} days per clutch.</SF_MalesForEggsTip>
   <SF_TimeToPregnancyTip>A freshly fertile female conceives after about {0} days on average when males are around: {1} mating attempts per male per day, each impregnating with a {2} chance.\n\nThis wait is included in the reproduction cycle, the offspring rate and all food-efficiency numbers below.</SF_TimeToPregnancyTip>
-  <SF_TimeToFertilizationTip>A female's next clutch is fertilized after about {0} days on average when males are around ({1} mating attempts per male per day, fertilization is guaranteed on mating).\n\nOnly stall-layers lose laying time waiting; layers that can lay unfertilized eggs lose nothing.</SF_TimeToFertilizationTip>
+  <SF_TimeToFertilizationTip>A clutch is fertilized after about {0} days on average when males are around ({1} mating attempts per male per day, fertilization is guaranteed on mating).\n\nOnly fertilized clutches hatch, so this wait is part of the cycle, the offspring rate and every food-efficiency number below. Hens that can lay unfertilized eggs lose no laying time - the wait only slows hatchling production.</SF_TimeToFertilizationTip>
   <SF_CycleTipMammal>Gestation {0} days plus {1} days average conception wait makes {2} days per litter of {3}.</SF_CycleTipMammal>
   <SF_CycleTipEgg>One clutch of {0} eggs every {1} days{2}.</SF_CycleTipEgg>
   <SF_CycleStallNote>, plus about {0} days waiting for fertilization</SF_CycleStallNote>
   <SF_HatchTip>Fertilized eggs hatch after {0} days. Eggs don't eat, so this delays offspring but costs no food.</SF_HatchTip>
-  <SF_OffspringPerDayTipMammal>A litter of {0} every {1} days of gestation ({2} days including the average conception wait) gives {3} offspring per female per day with ample males.</SF_OffspringPerDayTipMammal>
-  <SF_OffspringPerDayTipEgg>{0} eggs per clutch, one clutch every {1} days ({2} days including the average fertilization wait) gives {3} hatchlings per female per day with ample males.</SF_OffspringPerDayTipEgg>
+  <SF_OffspringPerDayTipMammal>A litter of {0} every {1} days of gestation ({2} days including the average conception wait) gives {3} offspring per female per day. The wait is the average time to a successful mating with a free male - keep at least the optimal ratio above so a male stays available.</SF_OffspringPerDayTipMammal>
+  <SF_OffspringPerDayTipEgg>{0} eggs per clutch, one clutch every {1} days ({2} days including the average fertilization wait) gives {3} hatchlings per female per day. Unfertilized eggs never hatch, so even hens that can lay without a male pay this wait when the goal is offspring; it assumes a free male - keep at least the optimal ratio above.</SF_OffspringPerDayTipEgg>
   <SF_MeatPerDayTip>Growing the offspring to adults and slaughtering them yields {0} meat nutrition per female per day ({1} offspring/day x {2} nutrition each) - before subtracting their growth food, and before the females' and males' own upkeep.\n\nMilk, wool, edible eggs and leather are extra on top of this.</SF_MeatPerDayTip>
   <SF_LeatherPerDayTip>The same slaughter also yields {0}: {1} units per grown adult, or {2} units per female per day at the offspring rate above (same grown-adult basis as the meat row).\n\nLeather scales with the slaughter stage's body size factor and is a bonus on top of the meat numbers - it is not counted in any nutrition efficiency or the net row.</SF_LeatherPerDayTip>
   <SF_HerdFoodTip>A female eats {0} nutrition per day of the assumed feed; adding her share of breeding males ({1} per female) gives {2} nutrition per female per day of breeding-stock upkeep (raw nutrition).
@@ -81,7 +81,7 @@ Excluding the fathers' share, the same slaughter returns {10}.</SF_EfficiencyTip
   <SF_PregnantAdviceTip>A randomly picked pregnant female is on average halfway through gestation: about {0} days x {1} nutrition/day = {2} nutrition left to spend on the pregnancy.\n\nThe newborn litter would return {3} nutrition{5} if slaughtered right away.\n\n{4}</SF_PregnantAdviceTip>
   <SF_PregnantAdviceLet>Let her give birth - the litter outvalues the remaining pregnancy feed. Letting offspring grow past birth only pays if the grown-stage efficiency above exceeds 100%.</SF_PregnantAdviceLet>
   <SF_PregnantAdviceSlaughter>Slaughtering now is fine - the litter does not outvalue the remaining pregnancy feed.</SF_PregnantAdviceSlaughter>
-  <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0}, males at the optimal ratio, herd fed {1}), all raw nutrition eaten vs meat produced, per female per day:
+  <SF_NetPerDayTip>Steady-state meat farm (slaughter at {0} - the stage with the largest meat-minus-food margin, not always the best efficiency ratio; males at the optimal ratio, herd fed {1}), all raw nutrition eaten vs meat produced, per female per day:
 
 - meat income: +{2} nutrition
 - offspring growth food: -{3} nutrition
@@ -93,7 +93,14 @@ Net: {5} nutrition per female per day. Same all-in accounting as the efficiency 
   <SF_CurveNote>The game's meat post-processing boosts small yields (minimum ~14 meat before body-size scaling tapers off at 40), so small life stages return more meat than a straight body-size proportion of the adult - exactly what butchering yields in game.</SF_CurveNote>
   <SF_EfficiencyComparisonLine>{0}: {1}</SF_EfficiencyComparisonLine>
 
-
+
+
+
+
+
+
+
+
 
 
   <SF_FeedAssumed>Herd feed assumed: {0} (x{1} over raw food) - the best feed this animal's diet and stomach allow. Feed raw pieces instead and every food number scales back up accordingly.</SF_FeedAssumed>

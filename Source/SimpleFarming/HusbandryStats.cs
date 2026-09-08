@@ -178,12 +178,10 @@ namespace SimpleFarming
             string cycleTip;
             if (m.isEggLayer)
             {
-                string stallNote = m.malesNeededForEggs
-                    ? "SF_CycleStallNote".Translate(m.conceptionDelayDays.ToString("0.##"))
-                    : "";
-                cycleValue = "SF_CycleEggValue".Translate(m.cycleDays.ToString("0.##"));
+                string waitNote = "SF_CycleStallNote".Translate(m.conceptionDelayDays.ToString("0.##"));
+                cycleValue = "SF_CycleEggValue".Translate(m.cycleDaysWithDelay.ToString("0.##"));
                 cycleTip = "SF_CycleTipEgg".Translate(m.litterSizeAvg.ToString("0.##"),
-                    m.cycleDays.ToString("0.##"), stallNote);
+                    m.cycleDays.ToString("0.##"), waitNote);
             }
             else
             {
@@ -274,19 +272,15 @@ namespace SimpleFarming
 
         /// <summary>Extended efficiency tooltip block: the same stage's slaughter efficiency
         /// on every feed - raw as the baseline plus each processed feed - regardless of the
-        /// settings' feed selection (those only pick the feed the headline assumes). Shows
-        /// wasteful feeds with their (worse) value and diet refusals outright.</summary>
+        /// settings' feed selection (those only pick the feed the headline assumes). Each
+        /// feed is priced per stage from the model's stored food parts with its own adult
+        /// and per-stage multipliers, so bulky feeds stay exact in small stages.</summary>
         private static string FeedBreakdown(HusbandryModel m, int stage)
         {
             if (m.feedOptions == null)
             {
                 return "";
             }
-            // The model's food numbers are stored in raw-nutrition units OF THE APPLIED
-            // FEED (Build divides them by feedMultiplier), so allInEfficiencyToStage already
-            // includes the applied multiplier. Recover the raw-feeding basis before scaling
-            // to each feed's own multiplier, or every line double-counts.
-            float rawEfficiency = m.allInEfficiencyToStage[stage] / m.feedMultiplier;
             StringBuilder sb = new StringBuilder();
             sb.Append("\n\n").Append("SF_FeedBreakdownHeader".Translate(m.feedLabel));
             for (int i = 0; i < m.feedOptions.Count; i++)
@@ -297,7 +291,8 @@ namespace SimpleFarming
                     sb.Append("\n").Append("SF_FeedBreakdownRefused".Translate(o.label));
                     continue;
                 }
-                string value = (rawEfficiency * o.multiplier).ToStringPercent();
+                string value = (m.stageMeatNutrition[stage]
+                    / m.AllInFoodWithFeed(stage, o)).ToStringPercent();
                 if (i == 0)
                 {
                     sb.Append("\n").Append("SF_FeedBreakdownBaseline".Translate(o.label, value));
@@ -404,7 +399,7 @@ namespace SimpleFarming
                     : "";
                 string tip = "SF_EfficiencyTip".Translate(stageLabel,
                     m.feedLabel,
-                    m.feedMultiplier.ToStringPercent(),
+                    m.StageFeedMultiplier(i).ToStringPercent(),
                     m.stageMeatNutrition[i].ToString("0.##"),
                     m.AllInFoodToStage(i).ToString("0.##"),
                     m.gestationFoodPerOffspring.ToString("0.##"),
@@ -435,12 +430,15 @@ namespace SimpleFarming
             }
 
             // -- net farm economics: all food the farm eats vs meat out --
-            if (m.bestStage >= 0)
+            // Evaluated at the best-margin stage (largest meat-minus-growth-food), which
+            // maximizes net because the fixed per-day costs are stage-independent - not
+            // necessarily the best-efficiency stage shown above.
+            if (m.bestNetStage >= 0)
             {
-                int best = m.bestStage;
+                int best = m.bestNetStage;
                 float meatPerDay = m.offspringPerFemalePerDay * m.stageMeatNutrition[best];
                 float offspringFoodPerDay = m.offspringPerFemalePerDay * m.growthFoodToStage[best];
-                float net = meatPerDay - offspringFoodPerDay - m.herdFoodPerFemalePerDay;
+                float net = m.NetAt(best);
                 string eggsNote = "";
                 if (m.canLayUnfertilized && m.eggProps.eggUnfertilizedDef != null)
                 {
