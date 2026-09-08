@@ -727,16 +727,21 @@ namespace SimpleFarming
             }
             if (hasMeat)
             {
+                int last = stages.Count - 1;
                 sb.Append(" adultMeat=").Append(adultMeatNutrition.ToString("0.##"));
-                sb.Append(" foodPerAdult=").Append(TotalFoodToStage(stages.Count - 1).ToString("0.##"));
+                sb.Append(" yield=").Append(butcherYieldFactor.ToStringPercent());
+                sb.Append(" foodPerAdult=").Append(AllInFoodToStage(last).ToString("0.##"));
                 sb.Append(" (gest ").Append(gestationFoodPerOffspring.ToString("0.##"));
                 sb.Append(" + wait ").Append(conceptionFoodPerOffspring.ToString("0.##"));
-                sb.Append(" + growth ").Append(growthFoodToStage[stages.Count - 1].ToString("0.##")).Append(")");
-                sb.Append(" eff(all-in):");
+                sb.Append(" + growth ").Append(growthFoodToStage[last].ToString("0.##"));
+                sb.Append(" + fathers ").Append(maleFoodPerOffspring.ToString("0.##")).Append(")");
+                sb.Append(" meat=").Append(JoinedSlash(stageMeatNutrition, "0.##"));
+                sb.Append(" eff(all-in|ex-males):");
                 for (int i = 0; i < stages.Count; i++)
                 {
                     sb.Append(' ').Append(stages[i].def.defName).Append('=')
-                        .Append(allInEfficiencyToStage[i].ToStringPercent());
+                        .Append(allInEfficiencyToStage[i].ToStringPercent())
+                        .Append('|').Append(efficiencyToStage[i].ToStringPercent());
                 }
                 if (meatCurveActive)
                 {
@@ -745,6 +750,10 @@ namespace SimpleFarming
                 if (bestStage >= 0)
                 {
                     sb.Append(" best=").Append(stages[bestStage].def.defName);
+                    float meatPerDay = offspringPerFemalePerDay * stageMeatNutrition[bestStage];
+                    float offspringFoodPerDay = offspringPerFemalePerDay * growthFoodToStage[bestStage];
+                    float net = meatPerDay - offspringFoodPerDay - herdFoodPerFemalePerDay;
+                    sb.Append(" net=").Append(net.ToString("+0.00;-0.00")).Append("/d");
                 }
                 if (!isEggLayer)
                 {
