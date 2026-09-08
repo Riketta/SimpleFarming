@@ -102,7 +102,7 @@ namespace SimpleFarming
 
         private static string Slash(HusbandryModel m, Func<int, string> perStage)
         {
-            if (m.stages == null)
+            if (!m.applicable || m.stages == null)
             {
                 return "";
             }

@@ -259,6 +259,12 @@ namespace SimpleFarming
         /// what feed carries it.</summary>
         public float MealsPerDayInStage(int i)
         {
+            // Null/length guard for skipped or failed placeholders (their arrays were never
+            // allocated) - bulk consumers call this for every row.
+            if (stageMaxNutrition == null || i < 0 || i >= stageMaxNutrition.Length)
+            {
+                return 0f;
+            }
             float usable = stageMaxNutrition[i] * (1f - wantEatLevel);
             return usable > Epsilon ? stageFoodPerDay[i] * feedMultiplier / usable : 0f;
         }
