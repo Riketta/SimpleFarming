@@ -36,7 +36,7 @@ namespace SimpleFarming
             {
                 new TableDataGetter<HusbandryModel>("def", m => Name(m)),
                 new TableDataGetter<HusbandryModel>("skip reason",
-                    m => m.applicable ? "" : m.skipReason),
+                    m => m.applicable ? (m.skipReason ?? "") : ""),
                 new TableDataGetter<HusbandryModel>("type",
                     m => O(m, m.isEggLayer ? "eggs" : "live")),
                 new TableDataGetter<HusbandryModel>("ratio", m => O(m, m.RatioString())),
@@ -52,7 +52,7 @@ namespace SimpleFarming
                 new TableDataGetter<HusbandryModel>("stomach\nb/j/a",
                     m => O(m, HusbandryModel.JoinedSlash(m.stageMaxNutrition, "0.##"))),
                 new TableDataGetter<HusbandryModel>("meals/d\nb/j/a",
-                    m => O(m, Slash(m, i => m.MealsPerDayInStage(i).ToString("0.##")))),
+                    m => Slash(m, i => m.MealsPerDayInStage(i).ToString("0.##"))),
                 new TableDataGetter<HusbandryModel>("adult\nfood/d",
                     m => O(m, F(m.adultFoodPerDay))),
                 new TableDataGetter<HusbandryModel>("herd\nfood/d",
@@ -60,7 +60,9 @@ namespace SimpleFarming
                 new TableDataGetter<HusbandryModel>("meat\nb/j/a",
                     m => O(m, HusbandryModel.JoinedSlash(m.stageMeatNutrition, "0.##"))),
                 new TableDataGetter<HusbandryModel>("food/adult",
-                    m => O(m, F(m.AllInFoodToStage(m.StageCount - 1)))),
+                    m => m.applicable
+                        ? F(m.AllInFoodToStage(m.StageCount - 1))
+                        : ""),
                 new TableDataGetter<HusbandryModel>("fathers\n/child",
                     m => O(m, F(m.maleFoodPerOffspring))),
                 new TableDataGetter<HusbandryModel>("eff\nb/j/a",
@@ -100,6 +102,10 @@ namespace SimpleFarming
 
         private static string Slash(HusbandryModel m, Func<int, string> perStage)
         {
+            if (m.stages == null)
+            {
+                return "";
+            }
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < m.StageCount; i++)
             {

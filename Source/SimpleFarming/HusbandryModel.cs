@@ -656,9 +656,14 @@ namespace SimpleFarming
         // ==================== debug output ====================
 
         /// <summary>Joins values with "/" for the compact stomach lists shared by the
-        /// info-card value and the debug line.</summary>
+        /// info-card value and the debug line. Null-safe: bulk consumers (debug table)
+        /// also feed it Failed placeholders whose arrays do not exist.</summary>
         public static string JoinedSlash(float[] values, string format)
         {
+            if (values == null)
+            {
+                return "";
+            }
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < values.Length; i++)
             {
