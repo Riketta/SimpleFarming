@@ -577,6 +577,13 @@ namespace SimpleFarming
             return m;
         }
 
+        /// <summary>A non-applicable placeholder for a def whose computation threw; used by
+        /// bulk consumers so one broken modded def cannot break the debug table or card.</summary>
+        public static HusbandryModel Failed(ThingDef def, string reason)
+        {
+            return Skip(new HusbandryModel { def = def }, reason);
+        }
+
         // ---- feed options ----
 
         /// <summary>Considers one processed feed for the option list: nominal conversion

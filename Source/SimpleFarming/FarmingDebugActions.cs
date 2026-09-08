@@ -17,12 +17,15 @@ namespace SimpleFarming
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Husbandry stats for all loaded animals (awake hours setting: "
                 + SimpleFarmingMod.AwakeHoursPerDay.ToString("0.#") + "):");
-            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs
-                .Where(d => d.race != null && d.race.Animal)
-                .OrderBy(d => d.defName))
+            using (FarmingLog.QuietScope())
             {
-                HusbandryModel m = HusbandryStats.ModelFor(def);
-                sb.AppendLine(m != null ? m.ToDebugLine() : def.defName + ": skipped");
+                foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs
+                    .Where(d => d.race != null && d.race.Animal)
+                    .OrderBy(d => d.defName))
+                {
+                    HusbandryModel m = HusbandryStats.ModelFor(def);
+                    sb.AppendLine(m != null ? m.ToDebugLine() : def.defName + ": skipped");
+                }
             }
             Log.Message("[SimpleFarming] " + sb.ToString());
         }

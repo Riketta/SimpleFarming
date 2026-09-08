@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Verse;
 
@@ -11,9 +12,29 @@ namespace SimpleFarming
 
         private static readonly HashSet<string> onceKeys = new HashSet<string>();
 
+        private static int quietDepth;
+
+        /// <summary>Suppresses Debug/DebugOnce output while disposed - bulk dev actions use
+        /// it so computing every model does not flood the log with per-animal lines. Errors
+        /// are never suppressed, and keys are not consumed while quiet, so later info-card
+        /// opens still log their animals once.</summary>
+        public static IDisposable QuietScope()
+        {
+            quietDepth++;
+            return new QuietToken();
+        }
+
+        private sealed class QuietToken : IDisposable
+        {
+            public void Dispose()
+            {
+                quietDepth--;
+            }
+        }
+
         public static void Debug(string message)
         {
-            if (SimpleFarmingMod.DebugLogging)
+            if (quietDepth == 0 && SimpleFarmingMod.DebugLogging)
             {
                 Log.Message(Prefix + message);
             }
@@ -23,6 +44,10 @@ namespace SimpleFarming
         /// info card repeatedly does not spam the log.</summary>
         public static void DebugOnce(string key, string message)
         {
+            if (quietDepth > 0)
+            {
+                return;
+            }
             if (!onceKeys.Add(key))
             {
                 return;

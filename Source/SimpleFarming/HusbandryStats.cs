@@ -53,7 +53,17 @@ namespace SimpleFarming
             }
             if (!Cache.TryGetValue(def, out HusbandryModel model))
             {
-                model = HusbandryModel.Build(def);
+                try
+                {
+                    model = HusbandryModel.Build(def);
+                }
+                catch (System.Exception e)
+                {
+                    // One broken modded def must not break the info card or a bulk table.
+                    model = HusbandryModel.Failed(def, "error: " + e.Message);
+                    FarmingLog.ErrorOnce("build:" + def.defName,
+                        "husbandry computation failed for " + def.defName + ":\n" + e);
+                }
                 Cache[def] = model;
                 if (model.applicable)
                 {

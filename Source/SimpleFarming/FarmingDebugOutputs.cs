@@ -17,12 +17,16 @@ namespace SimpleFarming
         [DebugOutput("Simple Farming", true)]
         public static void Husbandry()
         {
-            List<HusbandryModel> models = DefDatabase<ThingDef>.AllDefs
-                .Where(d => d.race != null && d.race.Animal)
-                .OrderBy(d => d.defName)
-                .Select(HusbandryStats.ModelFor)
-                .Where(m => m != null)
-                .ToList();
+            List<HusbandryModel> models;
+            using (FarmingLog.QuietScope())
+            {
+                models = DefDatabase<ThingDef>.AllDefs
+                    .Where(d => d.race != null && d.race.Animal)
+                    .OrderBy(d => d.defName)
+                    .Select(HusbandryStats.ModelFor)
+                    .Where(m => m != null)
+                    .ToList();
+            }
             DebugTables.MakeTablesDialog(models, Getters().ToArray());
         }
 
