@@ -20,7 +20,7 @@ namespace SimpleFarming
             using (FarmingLog.QuietScope())
             {
                 foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs
-                    .Where(d => d.race != null && d.race.Animal)
+                    .Where(d => d.race != null && d.race.Animal && !d.IsCorpse)
                     .OrderBy(d => d.defName))
                 {
                     HusbandryModel m = HusbandryStats.ModelFor(def);

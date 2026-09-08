@@ -11,7 +11,8 @@ namespace SimpleFarming
     /// <summary>Table output for the dev "Output" tab (the debug logging menu): every
     /// animal's full husbandry stat set in sortable columns, mirroring the info-card block.
     /// Values come from the same cached models the cards use, so a row always matches what
-    /// the card shows for that animal.</summary>
+    /// the card shows for that animal. Auto-generated corpse defs carry a copy of the
+    /// race props, so they are filtered out explicitly.</summary>
     public static class FarmingDebugOutputs
     {
         [DebugOutput("Simple Farming", true)]
@@ -21,7 +22,7 @@ namespace SimpleFarming
             using (FarmingLog.QuietScope())
             {
                 models = DefDatabase<ThingDef>.AllDefs
-                    .Where(d => d.race != null && d.race.Animal)
+                    .Where(d => d.race != null && d.race.Animal && !d.IsCorpse)
                     .OrderBy(d => d.defName)
                     .Select(HusbandryStats.ModelFor)
                     .Where(m => m != null)
